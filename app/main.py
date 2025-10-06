@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .models import MetricsRequest, MetricsResponse
+from .schemas import MetricsRequest, MetricsResponse
 from .services.data import get_price_history
 
 # These are the functions that will turn the raw data into useful stuff
