@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from .schemas import MetricsRequest, MetricsResponse
 from .services.data import get_price_history
 
+from fastapi.middleware.cors import  CORSMiddleware
+
 # These are the functions that will turn the raw data into useful stuff
 from .services.metrics import (
     build_aligned_prices,
@@ -14,6 +16,13 @@ from .services.metrics import (
 )
 
 app = FastAPI(title= "Portfolio Theorycrafter")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins = ['http://localhost:5173'],
+    allow_credentials = True,
+    allow_methods = ["*"],
+    allow_headers = ["*"],
+)
 
 # to check the state of the api
 @app.get("/health")
