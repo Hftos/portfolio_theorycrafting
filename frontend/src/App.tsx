@@ -12,6 +12,7 @@ type MetricsResponse = {
 function parseTickers(input: string): string[] {
   return input.split(",").map(t => t.trim().toUpperCase()).filter(Boolean);
 }
+
 function parseWeights(input: string): number[] {
   return input.split(",").map(w => Number(w.trim())).filter(w => !Number.isNaN(w));
 }
@@ -19,7 +20,7 @@ function parseWeights(input: string): number[] {
 export default function App() {
   const [tickersText, setTickersText] = useState("SPY,AGG");
   const [weightsText, setWeightsText] = useState("60,40");
-  const [start, setStart] = useState("2018-01-01");
+  const [start, setStart] = useState("2020-01-01");
   const [end, setEnd] = useState("2024-12-31");
 
   const [loading, setLoading] = useState(false);
@@ -34,6 +35,13 @@ export default function App() {
 
     const tickers = parseTickers(tickersText);
     const weightsArr = parseWeights(weightsText);
+    
+    if (tickers.length === 0) {
+      setError("Please enter at least one ticker.");
+      setLoading(false);
+      return;
+    }
+
     if (tickers.length !== weightsArr.length) {
       setError("Tickers and weights count must match.");
       setLoading(false);
@@ -50,53 +58,119 @@ export default function App() {
       });
       setMetrics(data);
     } catch (err: any) {
-      setError(err.message || "Request failed.");
+      // Extract meaningful error message
+      let errorMsg = "Request failed.";
+      if (err.message) {
+        errorMsg = err.message;
+      }
+      setError(errorMsg);
+      console.error("Error fetching metrics:", err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: 800, margin: "40px auto", fontFamily: "system-ui, sans-serif" }}>
-      <h1>Portfolio Theorycrafting (MVP)</h1>
+    <div style={{ maxWidth: 800, margin: "40px auto", fontFamily: "system-ui, sans-serif", padding: "0 20px" }}>
+      <h1>Portfolio Theorycrafting</h1>
+      <p style={{ color: "#888", fontSize: "0.9em" }}>
+        Enter tickers and weights to analyze portfolio metrics. Note: Data fetching may take 10-30 seconds due to API rate limits.
+      </p>
+      
       <form onSubmit={onSubmit} style={{ display: "grid", gap: 12, marginTop: 16 }}>
-        <label>
-          Tickers (comma-separated)
-          <input value={tickersText} onChange={e => setTickersText(e.target.value)} />
+        <label style={{ display: "grid", gap: 4 }}>
+          <span style={{ fontWeight: 500 }}>Tickers (comma-separated)</span>
+          <input 
+            value={tickersText} 
+            onChange={e => setTickersText(e.target.value)}
+            placeholder="SPY,AGG,VTI"
+            style={{ padding: 8, fontSize: "1em" }}
+          />
         </label>
-        <label>
-          Weights (comma-separated, same length)
-          <input value={weightsText} onChange={e => setWeightsText(e.target.value)} />
+        
+        <label style={{ display: "grid", gap: 4 }}>
+          <span style={{ fontWeight: 500 }}>Weights (comma-separated, same length)</span>
+          <input 
+            value={weightsText} 
+            onChange={e => setWeightsText(e.target.value)}
+            placeholder="60,40"
+            style={{ padding: 8, fontSize: "1em" }}
+          />
         </label>
+        
         <div style={{ display: "flex", gap: 12 }}>
-          <label style={{ flex: 1 }}>
-            Start
-            <input type="date" value={start} onChange={e => setStart(e.target.value)} />
+          <label style={{ flex: 1, display: "grid", gap: 4 }}>
+            <span style={{ fontWeight: 500 }}>Start Date</span>
+            <input 
+              type="date" 
+              value={start} 
+              onChange={e => setStart(e.target.value)}
+              style={{ padding: 8, fontSize: "1em" }}
+            />
           </label>
-          <label style={{ flex: 1 }}>
-            End
-            <input type="date" value={end} onChange={e => setEnd(e.target.value)} />
+          <label style={{ flex: 1, display: "grid", gap: 4 }}>
+            <span style={{ fontWeight: 500 }}>End Date</span>
+            <input 
+              type="date" 
+              value={end} 
+              onChange={e => setEnd(e.target.value)}
+              style={{ padding: 8, fontSize: "1em" }}
+            />
           </label>
         </div>
-        <button type="submit" disabled={loading}>
-          {loading ? "Computing..." : "Compute Metrics"}
+        
+        <button type="submit" disabled={loading} style={{ padding: "12px 24px", fontSize: "1em", marginTop: 8 }}>
+          {loading ? "Computing... (this may take 10-30 seconds)" : "Compute Metrics"}
         </button>
       </form>
 
-      {error && <p style={{ color: "crimson", marginTop: 12 }}>{error}</p>}
+      {loading && (
+        <div style={{ marginTop: 24, padding: 16, backgroundColor: "#f0f0f0", borderRadius: 8, color: "#333" }}>
+          <p style={{ margin: 0 }}>⏳ Fetching market data...</p>
+          <p style={{ margin: "8px 0 0 0", fontSize: "0.9em", color: "#666" }}>
+            This can take 10-30 seconds due to API rate limits. Please wait.
+          </p>
+        </div>
+      )}
+
+      {error && (
+        <div style={{ marginTop: 24, padding: 16, backgroundColor: "#fee", border: "1px solid #fcc", borderRadius: 8 }}>
+          <p style={{ color: "#c00", margin: 0, fontWeight: 500 }}>Error:</p>
+          <p style={{ color: "#c00", margin: "8px 0 0 0" }}>{error}</p>
+        </div>
+      )}
 
       {metrics && (
-        <div style={{ marginTop: 24 }}>
-          <h2>Results</h2>
-          <ul>
-            <li>Annual Return: {(metrics.annual_return * 100).toFixed(2)}%</li>
-            <li>Annual Volatility: {(metrics.annual_vol * 100).toFixed(2)}%</li>
-            <li>Sharpe: {Number.isFinite(metrics.sharpe) ? metrics.sharpe.toFixed(2) : "NaN"}</li>
-            <li>Max Drawdown: {(metrics.max_drawdown * 100).toFixed(2)}%</li>
-          </ul>
-          <details>
-            <summary>Correlation matrix (raw)</summary>
-            <pre>{JSON.stringify(metrics.correlation, null, 2)}</pre>
+        <div style={{ marginTop: 24, padding: 16, backgroundColor: "#f9f9f9", borderRadius: 8, color: "#333" }}>
+          <h2 style={{ marginTop: 0 }}>Portfolio Metrics</h2>
+          <div style={{ display: "grid", gap: 12 }}>
+            <div style={{ padding: 12, backgroundColor: "white", borderRadius: 4 }}>
+              <strong>Annual Return:</strong> {(metrics.annual_return * 100).toFixed(2)}%
+            </div>
+            <div style={{ padding: 12, backgroundColor: "white", borderRadius: 4 }}>
+              <strong>Annual Volatility:</strong> {(metrics.annual_vol * 100).toFixed(2)}%
+            </div>
+            <div style={{ padding: 12, backgroundColor: "white", borderRadius: 4 }}>
+              <strong>Sharpe Ratio:</strong> {Number.isFinite(metrics.sharpe) ? metrics.sharpe.toFixed(2) : "N/A"}
+            </div>
+            <div style={{ padding: 12, backgroundColor: "white", borderRadius: 4 }}>
+              <strong>Max Drawdown:</strong> {(metrics.max_drawdown * 100).toFixed(2)}%
+            </div>
+          </div>
+          
+          <details style={{ marginTop: 16 }}>
+            <summary style={{ cursor: "pointer", fontWeight: 500, padding: 8 }}>
+              View Correlation Matrix
+            </summary>
+            <pre style={{ 
+              backgroundColor: "white", 
+              padding: 12, 
+              borderRadius: 4, 
+              overflow: "auto",
+              fontSize: "0.85em"
+            }}>
+              {JSON.stringify(metrics.correlation, null, 2)}
+            </pre>
           </details>
         </div>
       )}

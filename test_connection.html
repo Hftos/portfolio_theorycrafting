@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Connection Test</title>
+    <style>
+        body { font-family: system-ui; max-width: 800px; margin: 40px auto; padding: 20px; }
+        button { padding: 12px 24px; font-size: 16px; cursor: pointer; }
+        #result { margin-top: 20px; padding: 16px; border-radius: 8px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        pre { background: white; padding: 12px; border-radius: 4px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <h1>Backend Connection Test</h1>
+    <p>This page tests if the frontend can connect to the backend API.</p>
+
+    <button onclick="testConnection()">Test Connection</button>
+
+    <div id="result"></div>
+
+    <script>
+        async function testConnection() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>Testing connection...</p>';
+
+            try {
+                const url = 'http://127.0.0.1:8000/metrics';
+                const body = {
+                    weights: [
+                        { ticker: 'SPY', weight: 60 },
+                        { ticker: 'AGG', weight: 40 }
+                    ],
+                    start: '2024-01-01',
+                    end: '2024-12-31'
+                };
+
+                console.log('Making request to:', url);
+                console.log('Request body:', body);
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response headers:', [...response.headers.entries()]);
+
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${text}`);
+                }
+
+                const data = await response.json();
+                console.log('Response data:', data);
+
+                resultDiv.className = 'success';
+                resultDiv.innerHTML = `
+                    <h3>✓ Connection Successful!</h3>
+                    <p>Backend is responding correctly with mock data.</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                console.error('Connection error:', error);
+
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `
+                    <h3>✗ Connection Failed</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <h4>Troubleshooting:</h4>
+                    <ul>
+                        <li>Check if backend is running: <code>curl http://127.0.0.1:8000/health</code></li>
+                        <li>Check browser console for detailed error messages</li>
+                        <li>Verify CORS is properly configured</li>
+                        <li>Make sure you're accessing from localhost or 127.0.0.1</li>
+                    </ul>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
