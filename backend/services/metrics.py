@@ -270,28 +270,30 @@ def max_drawdown(series: pd.Series) -> float:
 
 def corr_matrix(price_df: pd.DataFrame) -> pd.DataFrame:
     """
-    Calculate correlation matrix of daily returns between stocks.
-    
+    Calculate correlation matrix of daily log returns between stocks.
+
     Concept: Correlation measures how stocks move together.
         +1.0: Perfect positive correlation (both go up/down together)
          0.0: No correlation (independent movement)
         -1.0: Perfect negative correlation (one up, other down)
-    
-    Example: SPY vs AGG might have correlation of 0.3
-        → They somewhat move together but are partly independent
-        → Good for diversification! (reducing overall portfolio risk)
-    
-    Why it matters: Diversification works best when stocks are NOT perfectly
-    correlated. If everything moves together, you're not diversified!
-    
+
+    Log returns are used instead of simple returns because:
+    - They are time-additive (can sum across periods)
+    - More appropriate for statistical analysis
+    - Better properties for correlation analysis
+
     Args:
         price_df: DataFrame of daily prices
-    
+
     Returns:
         Correlation matrix (DataFrame where both rows and columns are tickers)
+        Values are rounded to 2 decimal places
     """
     if price_df.empty:
         return pd.DataFrame()
-    
-    # Calculate daily returns then correlation
-    return price_df.sort_index().pct_change().dropna(how="all").corr().round(4)
+
+    # Calculate daily log returns: ln(P_t / P_{t-1})
+    log_returns = np.log(price_df.sort_index() / price_df.sort_index().shift(1))
+
+    # Drop rows with all NaN and compute correlation
+    return log_returns.dropna(how="all").corr().round(2)

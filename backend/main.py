@@ -9,31 +9,15 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from .schemas import MetricsRequest, MetricsResponse
-from .services.data import get_price_history
-from .services.metrics import (
-    build_aligned_prices,
-    portfolio_value,
-    annualized_return,
-    annualized_volatility,
-    sharpe_ratio,
-    max_drawdown,
-    corr_matrix,
-)
+from .services.csv_data import get_price_history
+from .services.metrics import build_aligned_prices, corr_matrix
 
 logger = logging.getLogger("uvicorn.error")
 
 app = FastAPI(title="Portfolio Theorycrafter")
 
 # Log startup configuration
-USE_MOCK_DATA = os.getenv("USE_MOCK_DATA", "false").lower() in ("true", "1", "yes")
-if USE_MOCK_DATA:
-    logger.warning("=" * 60)
-    logger.warning("MOCK DATA MODE ENABLED")
-    logger.warning("Using synthetic data instead of Yahoo Finance API")
-    logger.warning("Set USE_MOCK_DATA=false to use real data")
-    logger.warning("=" * 60)
-else:
-    logger.info("Using Yahoo Finance for live market data")
+logger.info("Using local CSV data files from data/ directory")
 
 app.add_middleware(
     CORSMiddleware,
@@ -84,91 +68,63 @@ async def metrics(req: MetricsRequest):
     try:
         tickers = [w.ticker for w in req.weights]
         if not tickers:
-            raise HTTPException(status_code=422, detail="Provide at least one ticker/weight.")
+            raise HTTPException(status_code=422, detail="Provide at least one ticker.")
 
-        logger.info(f"Fetching data for tickers: {tickers}")
-        
-        # Fetch all tickers with staggered delays to avoid rate limiting
+        logger.info(f"Loading data for tickers: {tickers}")
+
+        # Fetch all tickers concurrently (no delays needed for CSV reads)
         tasks = []
-        for i, ticker in enumerate(tickers):
-            # Stagger requests by 0.3 seconds each
-            delay = i * 0.3
-            tasks.append(fetch_ticker_data(ticker, req.start, req.end, delay))
-        
+        for ticker in tickers:
+            tasks.append(fetch_ticker_data(ticker, req.start, req.end, delay_seconds=0))
+
         # Wait for all fetches to complete
         results = await asyncio.gather(*tasks)
-        
+
         # Build dictionary of results
         prices_by_ticker = {ticker: series for ticker, series in results}
-        
+
         # Check if we got any data at all
         empties = [t for t, s in prices_by_ticker.items() if s is None or s.empty]
         if len(empties) == len(tickers):
             raise HTTPException(
                 status_code=400,
-                detail=f"No price data available for any ticker in date range {req.start} to {req.end}. "
-                       f"Please verify tickers are correct and try a different date range. "
+                detail=f"No price data available for any ticker. "
+                       f"Please verify tickers exist in the data/ directory. "
                        f"Failed tickers: {', '.join(empties)}"
             )
-        
+
         # Warn if some tickers failed
         if empties:
-            logger.warning(f"Could not fetch data for: {', '.join(empties)}")
-        
+            logger.warning(f"Could not load data for: {', '.join(empties)}")
+
         # Build aligned price dataframe
         df = build_aligned_prices(prices_by_ticker)
         if df.empty or len(df.columns) == 0:
             raise HTTPException(
-                status_code=400, 
-                detail=f"No overlapping price data for date range {req.start} to {req.end}. "
-                       f"Try a different date range or different tickers."
+                status_code=400,
+                detail=f"No overlapping price data found. "
+                       f"Try different tickers or check date range."
             )
-        
+
         logger.info(f"Successfully aligned {len(df)} days of data for {len(df.columns)} tickers")
 
-        # Compute metrics
-        weight_map = {w.ticker: float(w.weight) for w in req.weights}
-        
-        # Only use tickers we actually got data for
-        weight_map = {t: w for t, w in weight_map.items() if t in df.columns}
-        
-        if not weight_map:
-            raise HTTPException(
-                status_code=400,
-                detail="No valid tickers with data found."
-            )
-        
-        pv = portfolio_value(df, weight_map)
-        ann_ret = safe_float(annualized_return(pv))
-        ann_vol = safe_float(annualized_volatility(df, weight_map))
-        shp = safe_float(
-            sharpe_ratio(
-                ann_ret if ann_ret is not None else float("nan"),
-                ann_vol if ann_vol is not None else float("nan"),
-                rf=0.0,
-            )
-        )
-        mdd = safe_float(max_drawdown(pv))
-
-        # Correlation matrix -> JSON safe
+        # Compute correlation matrix of log returns
         corr_df = corr_matrix(df).replace([float("inf"), float("-inf")], float("nan")).fillna(0.0)
         corr_dict = {r: {c: safe_float(v) for c, v in corr_df.loc[r].items()} for r in corr_df.index}
 
-        # Guard: if everything ended up None, tell the user
-        if all(v is None or v == 0 for v in [ann_ret, ann_vol, shp, mdd]):
-            raise HTTPException(
-                status_code=400, 
-                detail="Insufficient data to compute meaningful metrics. Try a longer date range."
-            )
+        # Get date range metadata
+        dates = df.index.tolist()
+        start_date = dates[0] if dates else ""
+        end_date = dates[-1] if dates else ""
+        num_days = len(dates)
 
-        logger.info(f"Successfully computed metrics: return={ann_ret}, vol={ann_vol}, sharpe={shp}")
+        logger.info(f"Successfully computed correlation matrix for {len(df.columns)} tickers")
+        logger.info(f"Date range: {start_date} to {end_date} ({num_days} days)")
 
         return MetricsResponse(
-            annual_return=ann_ret if ann_ret is not None else 0.0,
-            annual_vol=ann_vol if ann_vol is not None else 0.0,
-            sharpe=shp if shp is not None else 0.0,
-            max_drawdown=mdd if mdd is not None else 0.0,
             correlation=corr_dict,
+            date_range={"start": start_date, "end": end_date},
+            num_observations=num_days
         )
 
     except HTTPException:
@@ -176,7 +132,7 @@ async def metrics(req: MetricsRequest):
     except Exception as e:
         logger.exception("Unhandled error in /metrics")
         raise HTTPException(
-            status_code=500, 
+            status_code=500,
             detail=f"Server error: {str(e)}"
         )
 
