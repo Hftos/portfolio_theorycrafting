@@ -268,6 +268,82 @@ def max_drawdown(series: pd.Series) -> float:
     return float(dd.min())
 
 
+def optimize_equal_weight(tickers: list[str]) -> dict[str, float]:
+    """
+    Create equal-weight allocation for given tickers.
+
+    Args:
+        tickers: List of ticker symbols
+
+    Returns:
+        Dictionary mapping ticker to equal weight
+    """
+    n = len(tickers)
+    if n == 0:
+        return {}
+    weight = 1.0 / n
+    return {ticker: weight for ticker in tickers}
+
+
+def portfolio_cumulative_returns(
+    price_df: pd.DataFrame,
+    weights: dict[str, float]
+) -> tuple[pd.Series, dict[str, pd.Series]]:
+    """
+    Calculate cumulative returns for portfolio and individual tickers.
+
+    Args:
+        price_df: DataFrame of daily prices
+        weights: Portfolio weights
+
+    Returns:
+        Tuple of (portfolio_series, individual_series_dict)
+        All series are normalized to start at 1.0
+    """
+    if price_df.empty:
+        return pd.Series(dtype="float64"), {}
+
+    # Normalize weights
+    w = pd.Series(weights, dtype="float64")
+    if w.sum() == 0:
+        w = w + 1e-12
+    w = w / w.sum()
+
+    # Calculate individual cumulative returns (normalize to 1.0 at start)
+    individual_returns = {}
+    for ticker in price_df.columns:
+        prices = price_df[ticker].dropna()
+        if len(prices) > 0:
+            individual_returns[ticker] = prices / prices.iloc[0]
+
+    # Calculate portfolio cumulative returns
+    pv = portfolio_value(price_df, weights, initial=1.0)
+
+    return pv, individual_returns
+
+
+def portfolio_drawdown_series(series: pd.Series) -> pd.Series:
+    """
+    Calculate drawdown series (as percentages) from portfolio value series.
+
+    Args:
+        series: Time series of portfolio values
+
+    Returns:
+        Series of drawdown percentages (0 to -100)
+    """
+    if series is None or series.empty:
+        return pd.Series(dtype="float64")
+
+    # Calculate running maximum
+    roll_max = series.cummax()
+
+    # Calculate drawdown at each point (as percentage)
+    dd = (series / roll_max - 1.0) * 100.0
+
+    return dd
+
+
 def corr_matrix(price_df: pd.DataFrame) -> pd.DataFrame:
     """
     Calculate correlation matrix of daily log returns between stocks.

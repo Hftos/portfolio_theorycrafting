@@ -45,38 +45,39 @@ class MetricsRequest(BaseModel):
     end: str    # End date in format "YYYY-MM-DD"
 
 
-class MetricsResponse(BaseModel):
-    """
-    Response payload for the /metrics endpoint.
+class AllocationItem(BaseModel):
+    """Single allocation with ticker and weight."""
+    ticker: str
+    weight: float
 
-    Returns correlation matrix of daily log returns with metadata.
 
-    Example:
-        {
-            "correlation": {
-                "SPY": {"SPY": 1.0, "AGG": 0.23},
-                "AGG": {"SPY": 0.23, "AGG": 1.0}
-            },
-            "date_range": {
-                "start": "2019-01-02",
-                "end": "2025-10-17"
-            },
-            "num_observations": 1667
-        }
-    """
-    correlation: Dict[str, Dict[str, float]]  # Ticker correlation matrix
-    date_range: Dict[str, str]  # Start and end dates of overlapping data
-    num_observations: int  # Number of days in the overlapping period
+class AllocationsResponse(BaseModel):
+    """Response for /allocations endpoint."""
+    allocations: List[AllocationItem]
+    date_range: Dict[str, str]
+    num_observations: int
 
-    @staticmethod
-    def empty() -> "MetricsResponse":
-        """
-        Create an empty response with default values.
 
-        Useful for error cases or when no data is available.
-        """
-        return MetricsResponse(
-            correlation={},
-            date_range={"start": "", "end": ""},
-            num_observations=0
-        )
+class CorrelationResponse(BaseModel):
+    """Response for /correlation endpoint."""
+    correlation: Dict[str, Dict[str, float]]
+    date_range: Dict[str, str]
+    num_observations: int
+
+
+class ReturnsResponse(BaseModel):
+    """Response for /returns endpoint."""
+    dates: List[str]
+    portfolio_values: List[float]
+    individual_values: Dict[str, List[float]]
+    date_range: Dict[str, str]
+    num_observations: int
+
+
+class DrawdownResponse(BaseModel):
+    """Response for /drawdown endpoint."""
+    dates: List[str]
+    drawdown_pct: List[float]
+    max_drawdown: float
+    date_range: Dict[str, str]
+    num_observations: int
