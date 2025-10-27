@@ -11,6 +11,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 import logging
+from typing import Literal
 
 log = logging.getLogger("uvicorn.error")
 
@@ -149,3 +150,143 @@ def get_mock_price_history(ticker: str, start: str, end: str) -> pd.Series:
         log.warning(f"[MOCK] Failed to generate data for {t}")
 
     return series
+
+
+def infer_asset_class_mock(ticker: str) -> Literal["EQUITY", "BOND", "ETF", "CASH"]:
+    """
+    Infer asset class from ticker symbol for mock data.
+
+    Args:
+        ticker: Stock symbol
+
+    Returns:
+        Asset class designation
+    """
+    t = ticker.upper()
+
+    # Bond ETFs
+    bond_keywords = ['AGG', 'BND', 'TLT', 'IEF', 'LQD', 'HYG', 'MUB', 'TIP']
+    if any(keyword in t for keyword in bond_keywords):
+        return "BOND"
+
+    # Common ETFs
+    etf_keywords = ['SPY', 'QQQ', 'IWM', 'VTI', 'VOO', 'GLD', 'DIA']
+    if any(keyword in t for keyword in etf_keywords):
+        return "ETF"
+
+    # Default to equity
+    return "EQUITY"
+
+
+def load_asset_series_mock(ticker: str, start: str = "2000-01-01", end: str = "2024-12-31") -> dict:
+    """
+    Generate mock asset data for development and testing.
+
+    This is a safe fallback when CSV files are missing. It generates realistic
+    synthetic data for 2-3 common tickers.
+
+    NOTE: This function is clearly documented to use MOCK DATA and should only be
+    used for development/testing, not production.
+
+    Args:
+        ticker: Stock symbol
+        start: Start date (default: 2000-01-01)
+        end: End date (default: 2024-12-31)
+
+    Returns:
+        Dictionary matching AssetSeries schema with mock data
+    """
+    t = ticker.strip().upper()
+
+    # Only provide mock data for a limited set of tickers
+    supported_mocks = ['SPY', 'AGG', 'QQQ', 'VTI', 'BND', 'AAPL', 'MSFT']
+    if t not in supported_mocks:
+        log.warning(f"[MOCK] No mock data available for {t}. Supported: {', '.join(supported_mocks)}")
+        return {
+            "ticker": t,
+            "asset_class": infer_asset_class_mock(t),
+            "series": []
+        }
+
+    log.info(f"[MOCK] Generating synthetic data for {t}")
+
+    # Generate price series
+    prices = get_mock_price_history(t, start, end)
+
+    if prices.empty:
+        return {
+            "ticker": t,
+            "asset_class": infer_asset_class_mock(t),
+            "series": []
+        }
+
+    # Generate mock dividend data (simple approximation)
+    dividends = _generate_mock_dividends(t, prices.index)
+
+    # Build series points
+    series_points = []
+    for date_str in prices.index:
+        price = float(prices.loc[date_str])
+        dividend = dividends.get(date_str, None)
+
+        series_points.append({
+            "date": date_str,
+            "price": price,
+            "total_return": None,  # Will be computed later
+            "dividend": dividend
+        })
+
+    log.info(f"[MOCK] ✓ Generated {len(series_points)} data points for {t}")
+
+    return {
+        "ticker": t,
+        "asset_class": infer_asset_class_mock(t),
+        "series": series_points
+    }
+
+
+def _generate_mock_dividends(ticker: str, date_index: pd.Index) -> dict:
+    """
+    Generate realistic mock dividend payments.
+
+    Assumes quarterly dividends for stocks/ETFs with typical yields.
+
+    Args:
+        ticker: Stock symbol
+        date_index: Date index from price series
+
+    Returns:
+        Dictionary mapping date strings to dividend amounts
+    """
+    t = ticker.upper()
+
+    # Define typical dividend yields
+    dividend_yields = {
+        'SPY': 0.015,  # ~1.5% yield
+        'QQQ': 0.005,  # ~0.5% yield
+        'VTI': 0.014,  # ~1.4% yield
+        'AGG': 0.025,  # ~2.5% yield
+        'BND': 0.024,  # ~2.4% yield
+        'AAPL': 0.005,  # ~0.5% yield
+        'MSFT': 0.008,  # ~0.8% yield
+    }
+
+    annual_yield = dividend_yields.get(t, 0.02)  # Default 2%
+    quarterly_yield = annual_yield / 4
+
+    # Pay dividends in Mar, Jun, Sep, Dec (end of quarter)
+    dividend_months = [3, 6, 9, 12]
+    dividends = {}
+
+    for date_str in date_index:
+        try:
+            date = datetime.fromisoformat(date_str)
+            # Check if this is close to end of dividend month
+            if date.month in dividend_months and date.day >= 25:
+                # Approximate dividend based on assumed price of 100
+                dividend_amount = 100.0 * quarterly_yield
+                dividends[date_str] = dividend_amount
+        except:
+            pass
+
+    return dividends

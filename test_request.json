@@ -1,0 +1,24 @@
+{
+  "holdings": [
+    {"ticker": "SPY", "asset_class": "ETF", "weight_pct": 60},
+    {"ticker": "AGG", "asset_class": "BOND", "weight_pct": 40}
+  ],
+  "rebalance": "ANNUAL",
+  "start": "2020-01-01",
+  "end": "2023-12-31",
+  "use_dividends": true,
+  "inflation_adjust": false,
+  "log_scale": false,
+  "benchmarks": ["SPY"],
+  "benchmark_ref": "SPY",
+  "assumptions": {
+    "expense_ratio_bps": 10,
+    "slippage_bps": 5,
+    "tax_mode": "TAX_DEFERRED",
+    "short_term_rate": 0.0,
+    "long_term_rate": 0.0,
+    "rf_rate": 0.03
+  },
+  "objective": "BALANCED",
+  "risk_tolerance": 5
+}

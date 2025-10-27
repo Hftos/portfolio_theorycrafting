@@ -15,6 +15,8 @@ from .schemas import (
     CorrelationResponse,
     ReturnsResponse,
     DrawdownResponse,
+    SimRequest,
+    SimResponse,
 )
 from .services.csv_data import get_price_history
 from .services.metrics import (
@@ -25,6 +27,7 @@ from .services.metrics import (
     portfolio_drawdown_series,
     max_drawdown,
 )
+from .services.simulation import simulate_portfolio
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -35,12 +38,7 @@ logger.info("Using local CSV data files from data/ directory")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:8000",
-        "http://127.0.0.1:8000",
-    ],
+    allow_origins=["*"],  # Allow all origins for development
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -281,3 +279,65 @@ async def prices(payload: Dict):
     except Exception as e:
         logger.exception("Error in /prices")
         return {"dates": [], "series": {}, "error": str(e)}
+
+
+@app.post("/simulate", response_model=SimResponse)
+async def simulate(req: SimRequest):
+    """
+    Run comprehensive portfolio simulation.
+
+    This endpoint performs:
+    - Data loading and alignment
+    - Total return calculation (with dividends if requested)
+    - Rebalancing at specified frequency
+    - Fee/slippage application
+    - Inflation adjustment (if requested)
+    - Complete metrics calculation (CAGR, Sharpe, etc.)
+    - Detailed diagnostics (rolling stats, risk contrib, etc.)
+
+    Example request:
+    {
+        "holdings": [
+            {"ticker": "SPY", "asset_class": "ETF", "weight_pct": 60},
+            {"ticker": "AGG", "asset_class": "BOND", "weight_pct": 40}
+        ],
+        "rebalance": "ANNUAL",
+        "start": "2020-01-01",
+        "end": "2024-12-31",
+        "use_dividends": true,
+        "inflation_adjust": false,
+        "benchmarks": ["SPY"],
+        "benchmark_ref": "SPY",
+        "assumptions": {
+            "expense_ratio_bps": 10,
+            "slippage_bps": 5,
+            "tax_mode": "TAX_DEFERRED",
+            "rf_rate": 0.03
+        }
+    }
+    """
+    try:
+        logger.info(f"Received simulation request: {len(req.holdings)} holdings")
+
+        # Validate request
+        if not req.holdings:
+            raise HTTPException(status_code=422, detail="At least one holding required")
+
+        total_weight = sum(h.weight_pct for h in req.holdings)
+        if abs(total_weight - 100.0) > 0.01:
+            logger.warning(f"Weights sum to {total_weight}%, normalizing to 100%")
+
+        # Run simulation
+        result = simulate_portfolio(req)
+
+        logger.info("Simulation completed successfully")
+        return result
+
+    except ValueError as e:
+        logger.error(f"Validation error in /simulate: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Error in /simulate")
+        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")

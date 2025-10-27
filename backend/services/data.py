@@ -262,3 +262,80 @@ def get_price_history(ticker: str, start: str, end: str, max_retries: int = 3) -
     log.error(f"  2. Check if ticker is correct at https://finance.yahoo.com/quote/{t}")
     log.error(f"  3. Try a different date range (e.g., 2023-01-01 to 2023-12-31)")
     return pd.Series(dtype="float64", name=t)
+
+
+def align_series(assets: list[dict], start: str, end: str) -> dict[str, list[dict]]:
+    """
+    Align multiple asset series to common dates within a date range.
+
+    Takes a list of AssetSeries dictionaries and ensures all have the same dates.
+    Missing dates are filled with NaN or forward-filled from the last known value.
+
+    Args:
+        assets: List of AssetSeries dictionaries with structure:
+                {
+                    "ticker": str,
+                    "asset_class": str,
+                    "series": [{"date": str, "price": float, ...}, ...]
+                }
+        start: Start date 'YYYY-MM-DD' (inclusive)
+        end: End date 'YYYY-MM-DD' (inclusive)
+
+    Returns:
+        Dictionary mapping ticker to list of SeriesPoint dictionaries (all with same dates)
+        {
+            "SPY": [{"date": "2020-01-01", "price": 100.0, ...}, ...],
+            "AGG": [{"date": "2020-01-01", "price": 50.0, ...}, ...],
+            ...
+        }
+    """
+    if not assets:
+        return {}
+
+    # Convert each asset's series to a pandas DataFrame for easy alignment
+    dfs = {}
+    for asset in assets:
+        ticker = asset["ticker"]
+        series = asset["series"]
+
+        if not series:
+            continue
+
+        # Convert to DataFrame
+        df = pd.DataFrame(series)
+        df["date"] = pd.to_datetime(df["date"])
+        df = df.set_index("date")
+
+        # Filter to date range
+        df = df[(df.index >= start) & (df.index <= end)]
+
+        if not df.empty:
+            dfs[ticker] = df
+
+    if not dfs:
+        return {}
+
+    # Find all unique dates across all assets
+    all_dates = sorted(set().union(*[df.index for df in dfs.values()]))
+
+    # Reindex each DataFrame to have all dates
+    aligned = {}
+    for ticker, df in dfs.items():
+        # Reindex to all dates, forward-fill missing prices
+        df_aligned = df.reindex(all_dates, method="ffill")
+
+        # Convert back to list of dictionaries
+        series_points = []
+        for date in df_aligned.index:
+            row = df_aligned.loc[date]
+            series_points.append({
+                "date": date.strftime("%Y-%m-%d"),
+                "price": float(row["price"]) if pd.notna(row["price"]) else None,
+                "total_return": float(row["total_return"]) if "total_return" in row and pd.notna(row["total_return"]) else None,
+                "dividend": float(row["dividend"]) if "dividend" in row and pd.notna(row["dividend"]) else None,
+            })
+
+        aligned[ticker] = series_points
+
+    log.info(f"Aligned {len(aligned)} assets to {len(all_dates)} common dates")
+    return aligned

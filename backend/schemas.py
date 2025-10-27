@@ -10,7 +10,8 @@ Using Pydantic for:
 """
 
 from pydantic import BaseModel, Field
-from typing import List, Dict
+from typing import List, Dict, Literal, Optional
+from datetime import datetime
 
 
 class PortfolioWeight(BaseModel):
@@ -81,3 +82,64 @@ class DrawdownResponse(BaseModel):
     max_drawdown: float
     date_range: Dict[str, str]
     num_observations: int
+
+
+# ============================================================
+# NEW SCHEMAS FOR PORTFOLIO SIMULATION
+# ============================================================
+
+
+class SeriesPoint(BaseModel):
+    """A single data point in a time series."""
+    date: str  # ISO format date string YYYY-MM-DD
+    price: float
+    total_return: Optional[float] = None  # Total return index including dividends
+    dividend: Optional[float] = None  # Dividend paid on this date
+
+
+class AssetSeries(BaseModel):
+    """Complete time series data for a single asset."""
+    ticker: str
+    asset_class: Literal["EQUITY", "BOND", "ETF", "CASH"]
+    series: List[SeriesPoint]
+
+
+class PortfolioHolding(BaseModel):
+    """A single holding in the portfolio with weight."""
+    ticker: str
+    asset_class: Literal["EQUITY", "BOND", "ETF", "CASH"]
+    weight_pct: float = Field(..., ge=0, le=100)  # Weight as percentage (0-100)
+
+
+class Assumptions(BaseModel):
+    """Economic and tax assumptions for portfolio simulation."""
+    expense_ratio_bps: int = Field(default=0, ge=0)  # Expense ratio in basis points
+    slippage_bps: int = Field(default=0, ge=0)  # Slippage cost in basis points
+    tax_mode: Literal["TAX_DEFERRED", "TAXABLE"] = "TAX_DEFERRED"
+    short_term_rate: float = Field(default=0.0, ge=0, le=1)  # Short-term capital gains tax rate
+    long_term_rate: float = Field(default=0.0, ge=0, le=1)  # Long-term capital gains tax rate
+    rf_rate: float = Field(default=0.0, ge=0, le=1)  # Risk-free rate (for Sharpe/Sortino)
+
+
+class SimRequest(BaseModel):
+    """Request payload for portfolio simulation."""
+    holdings: List[PortfolioHolding]
+    rebalance: Literal["NONE", "ANNUAL", "QUARTERLY", "MONTHLY"] = "NONE"
+    start: str  # ISO date string YYYY-MM-DD
+    end: str  # ISO date string YYYY-MM-DD
+    use_dividends: bool = True
+    log_scale: bool = False  # Display preference (doesn't affect calculation)
+    inflation_adjust: bool = False
+    benchmarks: List[str] = Field(default_factory=list)  # List of benchmark tickers
+    benchmark_ref: str = "SPY"  # Reference benchmark for beta/alpha calculation
+    assumptions: Assumptions = Field(default_factory=Assumptions)
+    objective: Literal["GROWTH", "BALANCED", "INCOME", "PRESERVATION"] = "BALANCED"
+    risk_tolerance: int = Field(default=5, ge=1, le=10)  # Risk tolerance scale 1-10
+
+
+class SimResponse(BaseModel):
+    """Response payload for portfolio simulation."""
+    portfolio: List[SeriesPoint]  # Portfolio value over time
+    benchmarks: Dict[str, List[SeriesPoint]]  # Benchmark values over time
+    summary: Dict  # Key metrics (CAGR, vol, Sharpe, etc.)
+    diagnostics: Dict  # Detailed analytics (drawdown series, rolling metrics, etc.)

@@ -373,3 +373,359 @@ def corr_matrix(price_df: pd.DataFrame) -> pd.DataFrame:
 
     # Drop rows with all NaN and compute correlation
     return log_returns.dropna(how="all").corr().round(2)
+
+
+# ============================================================
+# NEW METRICS FUNCTIONS FOR PORTFOLIO SIMULATION
+# ============================================================
+
+
+def cagr(values: pd.Series, dates: pd.Index = None) -> float:
+    """
+    Calculate Compound Annual Growth Rate.
+
+    This is an alias for annualized_return that works with values and dates.
+
+    Args:
+        values: Series of portfolio values
+        dates: Optional date index (used to calculate exact years)
+
+    Returns:
+        CAGR as decimal (0.10 = 10% per year)
+    """
+    return annualized_return(values, periods_per_year=252)
+
+
+def annual_vol(returns: pd.Series, periods_per_year: int = 252) -> float:
+    """
+    Calculate annualized volatility from returns series.
+
+    Args:
+        returns: Series of periodic returns (daily, monthly, etc.)
+        periods_per_year: Number of periods per year (252 for daily, 12 for monthly)
+
+    Returns:
+        Annualized volatility as decimal (0.15 = 15% volatility)
+    """
+    if returns is None or returns.empty:
+        return float("nan")
+
+    return float(returns.std() * np.sqrt(periods_per_year))
+
+
+def ulcer_index(values: pd.Series) -> float:
+    """
+    Calculate Ulcer Index - a measure of downside volatility.
+
+    The Ulcer Index measures the depth and duration of drawdowns. Unlike standard
+    deviation, it only penalizes downside volatility.
+
+    Formula: sqrt(mean(drawdown^2))
+
+    Args:
+        values: Series of portfolio values
+
+    Returns:
+        Ulcer Index (higher = more downside pain)
+    """
+    if values is None or values.empty:
+        return float("nan")
+
+    # Calculate running maximum
+    roll_max = values.cummax()
+
+    # Calculate percentage drawdown at each point
+    drawdowns = ((values - roll_max) / roll_max) * 100.0
+
+    # Ulcer Index = sqrt(mean(drawdown^2))
+    return float(np.sqrt(np.mean(drawdowns ** 2)))
+
+
+def sortino(returns: pd.Series, rf: float = 0.0, periods_per_year: int = 252) -> float:
+    """
+    Calculate Sortino ratio - return per unit of downside risk.
+
+    Like Sharpe ratio, but only penalizes downside volatility (not upside).
+
+    Formula: (annual_return - rf) / downside_deviation
+
+    Args:
+        returns: Series of periodic returns
+        rf: Risk-free rate (annualized)
+        periods_per_year: Number of periods per year
+
+    Returns:
+        Sortino ratio (higher is better)
+    """
+    if returns is None or returns.empty:
+        return float("nan")
+
+    # Calculate annualized return
+    total_return = (1 + returns).prod() - 1
+    years = len(returns) / periods_per_year
+    annual_return = (1 + total_return) ** (1 / years) - 1 if years > 0 else 0.0
+
+    # Calculate downside deviation (only negative returns)
+    downside_returns = returns[returns < 0]
+    if downside_returns.empty:
+        return float("inf")  # No downside = infinite Sortino
+
+    downside_dev = downside_returns.std() * np.sqrt(periods_per_year)
+
+    if downside_dev == 0:
+        return float("inf")
+
+    return float((annual_return - rf) / downside_dev)
+
+
+def hit_rate(returns: pd.Series) -> float:
+    """
+    Calculate hit rate - percentage of positive return periods.
+
+    Args:
+        returns: Series of periodic returns
+
+    Returns:
+        Hit rate as decimal (0.65 = 65% of periods were positive)
+    """
+    if returns is None or returns.empty:
+        return float("nan")
+
+    positive = (returns > 0).sum()
+    total = len(returns)
+
+    return float(positive / total) if total > 0 else float("nan")
+
+
+def best_worst_year(values: pd.Series, dates: pd.Index) -> tuple[float, float]:
+    """
+    Find the best and worst calendar year returns.
+
+    Args:
+        values: Series of portfolio values
+        dates: Date index
+
+    Returns:
+        Tuple of (best_year_return, worst_year_return) as decimals
+    """
+    if values is None or values.empty or dates is None:
+        return (float("nan"), float("nan"))
+
+    # Group by year
+    df = pd.DataFrame({"value": values.values}, index=dates)
+    yearly = df.groupby(df.index.year)["value"]
+
+    # Calculate return for each year
+    yearly_returns = []
+    for year, group in yearly:
+        if len(group) > 1:
+            year_return = (group.iloc[-1] / group.iloc[0]) - 1
+            yearly_returns.append(year_return)
+
+    if not yearly_returns:
+        return (float("nan"), float("nan"))
+
+    return (float(max(yearly_returns)), float(min(yearly_returns)))
+
+
+def var_cvar(returns: pd.Series, p: float = 0.05) -> tuple[float, float]:
+    """
+    Calculate Value at Risk (VaR) and Conditional Value at Risk (CVaR).
+
+    VaR: The p-th percentile of returns (e.g., 5th percentile for 95% confidence)
+    CVaR: The average return below the VaR threshold (expected shortfall)
+
+    Args:
+        returns: Series of periodic returns
+        p: Percentile (default 0.05 for 5% VaR, meaning 95% confidence)
+
+    Returns:
+        Tuple of (VaR, CVaR) as decimals (negative values indicate losses)
+    """
+    if returns is None or returns.empty:
+        return (float("nan"), float("nan"))
+
+    # Calculate VaR at the p-th percentile
+    var = float(returns.quantile(p))
+
+    # Calculate CVaR (mean of returns below VaR)
+    tail_returns = returns[returns <= var]
+    cvar = float(tail_returns.mean()) if not tail_returns.empty else var
+
+    return (var, cvar)
+
+
+def beta_alpha(excess_port: pd.Series, excess_bench: pd.Series) -> tuple[float, float]:
+    """
+    Calculate beta and alpha using ordinary least squares (OLS) regression.
+
+    Beta: Portfolio's sensitivity to benchmark movements
+    Alpha: Portfolio's excess return not explained by benchmark (Jensen's alpha)
+
+    Args:
+        excess_port: Series of portfolio excess returns (portfolio - rf)
+        excess_bench: Series of benchmark excess returns (benchmark - rf)
+
+    Returns:
+        Tuple of (beta, alpha) where alpha is annualized
+    """
+    if excess_port is None or excess_port.empty or excess_bench is None or excess_bench.empty:
+        return (float("nan"), float("nan"))
+
+    # Align series
+    df = pd.DataFrame({"port": excess_port, "bench": excess_bench}).dropna()
+
+    if df.empty or len(df) < 2:
+        return (float("nan"), float("nan"))
+
+    # Calculate beta using covariance formula
+    covariance = df["port"].cov(df["bench"])
+    variance = df["bench"].var()
+
+    if variance == 0:
+        return (float("nan"), float("nan"))
+
+    beta = float(covariance / variance)
+
+    # Calculate alpha (daily) and annualize
+    alpha_daily = df["port"].mean() - beta * df["bench"].mean()
+    alpha_annual = float(alpha_daily * 252)  # Annualize assuming 252 trading days
+
+    return (beta, alpha_annual)
+
+
+def rolling_stats(values_or_returns: pd.Series, window: int, fn: callable) -> pd.Series:
+    """
+    Calculate rolling statistic using a window.
+
+    Args:
+        values_or_returns: Series of values or returns
+        window: Rolling window size (e.g., 252 for 1-year, 756 for 3-year)
+        fn: Function to apply (e.g., lambda x: x.mean())
+
+    Returns:
+        Series of rolling statistics
+    """
+    if values_or_returns is None or values_or_returns.empty:
+        return pd.Series(dtype="float64")
+
+    return values_or_returns.rolling(window=window, min_periods=window).apply(fn, raw=False)
+
+
+def correlation_matrix(returns_by_ticker: dict[str, pd.Series]) -> pd.DataFrame:
+    """
+    Calculate correlation matrix from return series.
+
+    Args:
+        returns_by_ticker: Dictionary mapping ticker to return series
+
+    Returns:
+        Correlation matrix DataFrame
+    """
+    if not returns_by_ticker:
+        return pd.DataFrame()
+
+    df = pd.DataFrame(returns_by_ticker).dropna()
+    if df.empty:
+        return pd.DataFrame()
+
+    return df.corr().round(2)
+
+
+def contribution_to_risk(weights: dict[str, float], cov: pd.DataFrame) -> dict[str, float]:
+    """
+    Calculate each asset's contribution to portfolio variance.
+
+    This shows which assets contribute most to overall portfolio risk.
+
+    Args:
+        weights: Dictionary mapping ticker to weight
+        cov: Covariance matrix of returns
+
+    Returns:
+        Dictionary mapping ticker to % contribution to variance
+    """
+    if not weights or cov.empty:
+        return {}
+
+    # Convert weights to Series aligned with covariance matrix
+    w = pd.Series(weights, dtype="float64")
+    w = w.reindex(cov.columns).fillna(0.0)
+
+    # Normalize weights
+    w = w / w.sum() if w.sum() > 0 else w
+
+    # Portfolio variance = w^T × Cov × w
+    portfolio_var = np.dot(w, np.dot(cov.values, w))
+
+    if portfolio_var == 0:
+        return {ticker: 0.0 for ticker in weights.keys()}
+
+    # Marginal contribution to variance = Cov × w
+    marginal_contrib = np.dot(cov.values, w)
+
+    # Total contribution = weight × marginal contribution
+    total_contrib = w * marginal_contrib
+
+    # Percentage contribution
+    pct_contrib = (total_contrib / portfolio_var * 100).to_dict()
+
+    return {ticker: float(pct_contrib.get(ticker, 0.0)) for ticker in weights.keys()}
+
+
+def hhi(weights: dict[str, float]) -> float:
+    """
+    Calculate Herfindahl-Hirschman Index (HHI) - a measure of concentration.
+
+    HHI = sum(weight^2) × 10000
+
+    Interpretation:
+    - HHI < 1500: Low concentration (diversified)
+    - 1500 < HHI < 2500: Moderate concentration
+    - HHI > 2500: High concentration
+
+    Args:
+        weights: Dictionary mapping ticker to weight (as decimals, e.g., 0.6 for 60%)
+
+    Returns:
+        HHI score (0-10000)
+    """
+    if not weights:
+        return 0.0
+
+    # Normalize weights to sum to 1
+    w = pd.Series(weights, dtype="float64")
+    w = w / w.sum() if w.sum() > 0 else w
+
+    # HHI = sum of squared weights × 10000
+    return float(np.sum(w ** 2) * 10000)
+
+
+def effective_duration_convexity(ticker: str) -> tuple[float | None, float | None]:
+    """
+    Calculate effective duration and convexity for bond instruments.
+
+    This is a STUB implementation that returns None for non-bond assets.
+    In a real implementation, this would fetch bond characteristics from a database
+    or calculate them from cash flows.
+
+    Args:
+        ticker: Bond ticker symbol
+
+    Returns:
+        Tuple of (duration, convexity) or (None, None) if not a bond
+    """
+    # Stub implementation - would need bond-specific data
+    # For now, return None unless we have hardcoded values
+
+    # Example hardcoded values for common bond ETFs
+    bond_characteristics = {
+        "AGG": (6.5, 0.5),   # Aggregate bond index ~6.5yr duration
+        "BND": (6.8, 0.6),   # Total bond market
+        "TLT": (17.5, 3.2),  # 20+ year treasuries
+        "IEF": (7.5, 0.8),   # 7-10 year treasuries
+        "SHY": (1.9, 0.1),   # 1-3 year treasuries
+        "LQD": (8.5, 1.0),   # Investment grade corporate
+    }
+
+    return bond_characteristics.get(ticker.upper(), (None, None))

@@ -1,22 +1,22 @@
-// frontend/src/lib/api.ts
-export const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
+import type { SimRequest, SimResponse } from "../types/api";
 
-export async function postJSON<T>(path: string, body: unknown): Promise<T> {
-  const url = `${API_BASE}${path}`;
-  const res = await fetch(url, {
+const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
+
+async function postJSON<T>(endpoint: string, body: unknown): Promise<T> {
+  const response = await fetch(API_BASE + endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
 
-  if (!res.ok) {
-    let text = "";
-    try {
-      text = await res.text();
-    } catch {}
-    // ⬇️ backticks (template literal), not quotes
-    throw new Error(`Request failed: ${res.status} ${text}`);
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error("HTTP " + response.status + ": " + (errorText || response.statusText));
   }
 
-  return res.json() as Promise<T>;
+  return response.json();
+}
+
+export async function runSimulation(request: SimRequest): Promise<SimResponse> {
+  return postJSON<SimResponse>("/simulate", request);
 }
