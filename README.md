@@ -80,6 +80,45 @@ Visit http://localhost:5173 to use the app.
 - **Auto-normalization**: Weights automatically normalized to sum to 1.0
 - **Real-time validation**: Frontend validates ticker/weight count matching
 
+## Brand Assets
+
+The application uses custom brand assets for logo and favicon. These assets are stored in the `/images` folder (excluded from git).
+
+### Required Assets
+
+The following brand assets should be placed in `frontend/public/` for production builds:
+
+1. **Logo Wordmark** (`logo-wordmark.svg`)
+   - Full horizontal logo with "Portfolio TheoryCrafter" text
+   - Used in the application header
+   - Recommended size: ~300px width, 40-60px height
+   - The word "Theory" uses Cormorant Garamond font, rest uses Manrope
+
+2. **Favicon** (`favicon.svg` and `favicon-512.png`)
+   - SVG favicon for modern browsers
+   - 512x512 PNG fallback for broader compatibility
+   - Optional: Square logo mark (3×3 grid motif with serif T)
+
+3. **Logo Mark (Optional)** (`logo-mark.svg`)
+   - Square version for small surfaces (social media, app icons)
+   - Can feature the 3×3 correlation grid motif
+
+### Working with Brand Assets
+
+- **Source files**: Keep working AI/design files in `/images` (this folder is gitignored)
+- **Production assets**: Copy final assets to `frontend/public/` before building
+- **Updating**: Replace files in `frontend/public/` and rebuild the app
+
+### Design System
+
+The UI follows a "mathematical playground" theme with:
+- **Typography**: Manrope (UI text), Cormorant Garamond (logo "Theory" only)
+- **Colors**: Slate/gray base, blue (positive/returns), coral (negative/risk), beige/gold (neutral)
+- **Layout**: Clean 12-column grid with generous spacing
+- **Motifs**: Subtle 3×3 correlation-grid pattern behind charts
+
+See `frontend/src/index.css` for the complete design system variables.
+
 ## Documentation
 
 See `CLAUDE.md` for detailed architecture, development workflow, and implementation notes.
