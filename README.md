@@ -1,124 +1,135 @@
 # Portfolio Theorycrafting
 
-A full-stack web application for analyzing portfolio performance metrics using real market data.
+A full-stack web application for analyzing portfolio performance metrics using real market data from Yahoo Finance.
 
-## Overview
+## What It Does
 
-Portfolio Theorycrafting helps users analyze investment portfolios by:
-- Fetching historical stock price data from Yahoo Finance
-- Computing key performance metrics (returns, volatility, Sharpe ratio, max drawdown)
-- Generating correlation matrices between assets
-- Providing aligned price series for visualization
+Portfolio Theorycrafting is an interactive tool that lets you:
 
-**Stack**: Python FastAPI backend + React TypeScript frontend
+- **Build portfolios** with multiple stocks/ETFs and custom allocations
+- **Run simulations** with historical market data
+- **Analyze performance** with 40+ metrics (returns, volatility, Sharpe ratio, max drawdown, etc.)
+- **Compare against benchmarks** like the S&P 500 or custom portfolios
+- **Visualize results** with interactive charts and correlation matrices
+- **Test rebalancing strategies** (none, monthly, quarterly, annual)
+
+**Tech Stack:** Python FastAPI backend + React TypeScript frontend
 
 ## Quick Start
 
-**Backend:**
+### 1. Start the Backend
+
 ```bash
 source .venv/bin/activate
 uvicorn backend.main:app --reload --port 8000
 ```
 
-**Frontend:**
+### 2. Start the Frontend
+
 ```bash
 cd frontend && npm run dev
 ```
 
-Visit http://localhost:5173 to use the app.
+### 3. Open Your Browser
 
-## File Structure
+Visit **http://localhost:5173**
 
-### Backend (`backend/`)
+## Using the Application
 
-- **`main.py`**: FastAPI application with two endpoints:
-  - `POST /metrics`: Computes portfolio metrics (return, volatility, Sharpe ratio, drawdown, correlations)
-  - `POST /prices`: Returns aligned price series for charting
-  - Implements async data fetching with rate limiting to handle Yahoo Finance
+Once the app loads in your browser:
 
-- **`schemas.py`**: Pydantic models for request/response validation
-  - `MetricsRequest`: Portfolio weights and date range input
-  - `MetricsResponse`: Computed metrics output
+1. **Build Your Portfolio**
+   - Use preset buttons (60/40, All-World, Income) or click "+ Add Holding"
+   - Enter ticker symbols (e.g., SPY, AGG, VTI) and set weights
+   - Weights automatically normalize to 100%
 
-- **`services/data.py`**: Yahoo Finance data fetching with extensive retry logic
-  - Multiple fetch strategies to handle API flakiness
-  - Returns normalized pandas Series with date strings as index
+2. **Configure Settings**
+   - Set date range (default: last 5 years)
+   - Choose rebalancing frequency
+   - Toggle dividends and inflation adjustment
+   - Add benchmark comparisons (S&P 500, Three-Fund, or custom)
 
-- **`services/metrics.py`**: Portfolio mathematics and calculations
-  - `build_aligned_prices()`: Aligns ticker data to common dates
-  - `portfolio_value()`: Calculates weighted portfolio returns
-  - Metric functions: annualized return, volatility, Sharpe ratio, max drawdown
-  - `corr_matrix()`: Correlation matrix computation
+3. **Run Simulation**
+   - Click "Run Simulation" button
+   - Results appear in 2-5 seconds
 
-- **`services/csv_data.py`**: CSV data loading utilities (if needed)
+4. **Analyze Results**
+   - **Summary Tiles**: 12 key metrics at a glance
+   - **Performance Chart**: Portfolio growth vs benchmarks (toggle log scale)
+   - **Drawdown Chart**: Visualize underwater periods
+   - **Correlation Matrix**: See asset relationships
+   - **Risk Contribution**: Understand which assets drive volatility
 
-- **`services/mock_data.py`**: Mock data for testing without API calls
+## Project Structure
 
-### Frontend (`frontend/src/`)
+```
+backend/
+├── main.py                 # FastAPI app with /simulate endpoint
+├── schemas.py              # Pydantic models for requests/responses
+└── services/
+    ├── simulation.py       # Portfolio simulation engine
+    ├── metrics.py          # 40+ metric calculations
+    ├── data.py             # Yahoo Finance data fetching
+    └── csv_data.py         # CSV data loading
 
-- **`App.tsx`**: Main React component
-  - Form for ticker/weight input and date selection
-  - State management for results and errors
-  - Results display logic
+frontend/src/
+├── App.tsx                 # Main application component
+├── components/             # AllocControls, PerformanceChart, etc.
+├── lib/api.ts             # API client
+└── types/api.ts           # TypeScript types
+```
 
-- **`lib/api.ts`**: API client utility
-  - `postJSON()`: Helper for making POST requests to backend
-  - Configurable base URL via `VITE_API_BASE` env var
+## Features
 
-- **`main.tsx`**: Application entry point
+- Multi-asset portfolio building with weight sliders
+- Concurrent data fetching from Yahoo Finance
+- Rebalancing simulation with fee and slippage modeling
+- Dividend reinvestment and inflation adjustment
+- Benchmark comparison (S&P 500, Three-Fund Portfolio, custom)
+- 40+ performance metrics including CAGR, Sharpe ratio, VaR, CVaR, beta, alpha
+- Interactive charts with Recharts
+- Dark mode support
+- Responsive design
 
-### Testing
+## Troubleshooting
 
-- **`test_yfinance.py`**: Tests for Yahoo Finance data fetching
-- **`test_yfinance_gentle.py`**: Gentler tests with rate limiting
+**Backend won't start?**
+```bash
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn backend.main:app --reload --port 8000
+```
 
-## Key Features
+**Frontend won't start?**
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-- **Concurrent data fetching**: Uses asyncio to fetch multiple tickers in parallel
-- **Rate limiting**: 0.3s stagger between requests to avoid Yahoo Finance throttling
-- **Robust error handling**: Multiple retry strategies for unreliable Yahoo Finance API
-- **Auto-normalization**: Weights automatically normalized to sum to 1.0
-- **Real-time validation**: Frontend validates ticker/weight count matching
+**No data showing?**
+- Ensure backend is running on port 8000
+- Check browser console (F12) for errors
+- The app falls back to mock data for common tickers (SPY, AGG, QQQ, VTI, BND)
 
-## Brand Assets
+**CORS errors?**
+- Backend is configured for localhost:5173
+- If using a different port, update CORS settings in `backend/main.py`
 
-The application uses custom brand assets for logo and favicon. These assets are stored in the `/images` folder (excluded from git).
+## API Documentation
 
-### Required Assets
+With the backend running, visit:
+- **API Docs**: http://localhost:8000/docs
+- **Health Check**: http://localhost:8000/health
 
-The following brand assets should be placed in `frontend/public/` for production builds:
+Main endpoint: `POST /simulate`
 
-1. **Logo Wordmark** (`logo-wordmark.svg`)
-   - Full horizontal logo with "Portfolio TheoryCrafter" text
-   - Used in the application header
-   - Recommended size: ~300px width, 40-60px height
-   - The word "Theory" uses Cormorant Garamond font, rest uses Manrope
-
-2. **Favicon** (`favicon.svg` and `favicon-512.png`)
-   - SVG favicon for modern browsers
-   - 512x512 PNG fallback for broader compatibility
-   - Optional: Square logo mark (3×3 grid motif with serif T)
-
-3. **Logo Mark (Optional)** (`logo-mark.svg`)
-   - Square version for small surfaces (social media, app icons)
-   - Can feature the 3×3 correlation grid motif
-
-### Working with Brand Assets
-
-- **Source files**: Keep working AI/design files in `/images` (this folder is gitignored)
-- **Production assets**: Copy final assets to `frontend/public/` before building
-- **Updating**: Replace files in `frontend/public/` and rebuild the app
-
-### Design System
-
-The UI follows a "mathematical playground" theme with:
-- **Typography**: Manrope (UI text), Cormorant Garamond (logo "Theory" only)
-- **Colors**: Slate/gray base, blue (positive/returns), coral (negative/risk), beige/gold (neutral)
-- **Layout**: Clean 12-column grid with generous spacing
-- **Motifs**: Subtle 3×3 correlation-grid pattern behind charts
-
-See `frontend/src/index.css` for the complete design system variables.
-
-## Documentation
+## Development
 
 See `CLAUDE.md` for detailed architecture, development workflow, and implementation notes.
+
+## Dependencies
+
+**Backend:** fastapi, uvicorn, pandas, numpy, yfinance, pydantic
+
+**Frontend:** react, typescript, vite, recharts

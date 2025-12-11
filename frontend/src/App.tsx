@@ -13,7 +13,10 @@ import RiskContribution from "./components/RiskContribution";
 import EmptyState from "./components/EmptyState";
 import ErrorToast from "./components/ErrorToast";
 import AssumptionsModal from "./components/AssumptionsModal";
+import WelcomeModal from "./components/WelcomeModal";
 import "./App.css";
+
+const WELCOME_MODAL_KEY = "portfolio_theorycrafting_welcome_seen";
 
 function App() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -22,6 +25,15 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAssumptionsModal, setShowAssumptionsModal] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+
+  // Check if welcome modal has been seen
+  useEffect(() => {
+    const hasSeenWelcome = localStorage.getItem(WELCOME_MODAL_KEY);
+    if (!hasSeenWelcome) {
+      setShowWelcomeModal(true);
+    }
+  }, []);
 
   // Apply theme to document
   useEffect(() => {
@@ -61,6 +73,11 @@ function App() {
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === "light" ? "dark" : "light"));
+  };
+
+  const handleCloseWelcome = () => {
+    localStorage.setItem(WELCOME_MODAL_KEY, "true");
+    setShowWelcomeModal(false);
   };
 
   const hasResults = response !== null;
@@ -192,6 +209,9 @@ function App() {
           onClose={() => setShowAssumptionsModal(false)}
         />
       )}
+
+      {/* Welcome Modal */}
+      {showWelcomeModal && <WelcomeModal onClose={handleCloseWelcome} />}
     </div>
   );
 }
