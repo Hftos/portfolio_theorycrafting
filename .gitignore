@@ -1,4 +1,6 @@
-# databases
-*data/
-*.env
-*.venv/
+.env
+.venv/
+data/
+__pycache__/
+*.pyc
+node_modules/
