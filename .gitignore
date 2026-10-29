@@ -1,4 +1,4 @@
 # databases
-*.data/
+*data/
 *.env
 *.venv/
