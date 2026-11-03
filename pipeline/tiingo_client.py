@@ -15,6 +15,7 @@ def fetch_prices(ticker: str, start_date: str = DEFAULT_START_DATE) -> pd.DataFr
     ticker = ticker.strip().upper()
     response =requests.get(
         f"{BASE_URL}/{ticker}/prices",
+        params={"startDate": start_date},
         headers = {"Authorization": f"Token {TIINGO_API_TOKEN}"},
         timeout = 30,
     )

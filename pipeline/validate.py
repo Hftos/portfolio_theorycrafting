@@ -3,7 +3,7 @@ import pandas as pd
 MAX_DAILY_MOVE=0.5
 MAX_GAP_DAYS=7
 
-def check_prices(df: pd.Dataframe) -> list[str]:
+def check_prices(df: pd.DataFrame) -> list[str]:
     warnings = []
     ticker = df["ticker"].iloc[0]
     prices = df.set_index("date")["adj_close"].sort_index()
@@ -22,4 +22,4 @@ def check_prices(df: pd.Dataframe) -> list[str]:
     for i in gaps[gaps > MAX_GAP_DAYS].index:
         warnings.append(f"{ticker}: {int(gaps[i])}- day gap ending {prices.index[i]}")
 
-        return ewarnings
+    return warnings
