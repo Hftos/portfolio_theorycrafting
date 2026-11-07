@@ -10,7 +10,7 @@ class Holding(BaseModel):
     @field_validator("ticker")
     @classmethod
     def clean_ticker(cls, v: str) -> str:
-        return v.strip(0).upper()
+        return v.strip().upper()
 
 class BacktestRequest(BaseModel):
     holdings: list[Holding] = Field(min_length=1, max_length=20)
@@ -25,12 +25,12 @@ class BacktestRequest(BaseModel):
         tickers = [h.ticker for h in self.holdings]
         if len(tickers) != len(set(tickers)):
             raise ValueError("Each ticker can only appear once.")
-        if self.star_date and self.end_date and self.start_date >= self.end_date:
+        if self.start_date and self.end_date and self.start_date >= self.end_date:
             raise ValueError("start_date must be before end_date")
         return self
 
     model_config = {
-        "json_schema_extra" = {
+        "json_schema_extra": {
             "examples": [{
                 "holdings": [{"ticker": "SPY", "weight":60}, {"ticker": "AGG", "weight": 40}],
                 "start_date": "2007-01-01",
