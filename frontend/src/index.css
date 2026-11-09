@@ -1,0 +1,34 @@
+/* Global styles. Kept minimal for now; real styling comes in the layout step. */
+
+:root {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  color: #1a1a1a;
+  background: #fafafa;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+table {
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.35rem 1rem 0.35rem 0;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.error {
+  color: #b42318;
+}
