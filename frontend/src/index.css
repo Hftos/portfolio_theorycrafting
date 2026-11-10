@@ -1,4 +1,4 @@
-/* Global styles. Kept minimal for now; real styling comes in the layout step. */
+/* Global styles. Kept simple for now; real layout comes in step 7. */
 
 :root {
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -17,6 +17,25 @@ main {
   padding: 2rem 1.5rem;
 }
 
+h2 {
+  font-size: 1.1rem;
+  margin: 0 0 0.75rem;
+}
+
+.builder {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 1rem;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
 table {
   border-collapse: collapse;
   font-variant-numeric: tabular-nums;
@@ -26,7 +45,49 @@ th,
 td {
   text-align: left;
   padding: 0.35rem 1rem 0.35rem 0;
-  border-bottom: 1px solid #e5e5e5;
+}
+
+.holdings input {
+  width: 6rem;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+input,
+select,
+button {
+  font: inherit;
+  padding: 0.3rem 0.5rem;
+}
+
+button.link {
+  background: none;
+  border: none;
+  color: #b42318;
+  cursor: pointer;
+  padding: 0;
+}
+
+pre {
+  background: #f4f4f4;
+  padding: 0.75rem;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-size: 0.85rem;
+}
+
+.muted {
+  color: #6b6b6b;
+}
+
+.warning {
+  color: #9a6700;
 }
 
 .error {
