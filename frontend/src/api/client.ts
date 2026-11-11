@@ -34,6 +34,11 @@ async function readErrorMessage(response: Response): Promise<string> {
   } catch {
     // body wasn't JSON; fall through
   }
+  // A server error with no FastAPI message means the request never reached FastAPI.
+  // In development that's usually the Vite proxy reporting that the backend is down.
+  if (response.status >= 500) {
+    return 'Could not reach the backend. Is uvicorn running?'
+  }
   return `Request failed (HTTP ${response.status})`
 }
 

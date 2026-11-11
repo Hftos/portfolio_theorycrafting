@@ -93,3 +93,47 @@ pre {
 .error {
   color: #b42318;
 }
+
+/* ---------- Run step ---------- */
+
+.run-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+button.primary {
+  background: #1f4fd1;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.55rem 1.25rem;
+  cursor: pointer;
+}
+
+button.primary:disabled {
+  background: #9aa9d6;
+  cursor: not-allowed;
+}
+
+.error-box {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  background: #fef3f2;
+  border: 1px solid #fecdca;
+  color: #b42318;
+  border-radius: 6px;
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.stale {
+  opacity: 0.6;
+}
+
+summary {
+  cursor: pointer;
+  font-weight: 600;
+}
