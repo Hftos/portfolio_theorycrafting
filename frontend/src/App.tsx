@@ -4,8 +4,8 @@ import { getSecurities, runBacktest } from './api/client'
 import { HoldingsList } from './components/builder/HoldingsList'
 import { SettingsPanel } from './components/builder/SettingsPanel'
 import { ErrorMessage } from './components/common/ErrorMessage'
+import { Dashboard } from './components/dashboard/Dashboard'
 import { buildRequest } from './lib/buildRequest'
-import { dollars, num, pct } from './lib/format'
 import type { BacktestResponse, Security } from './types/api'
 import type { HoldingRow, Settings } from './types/portfolio'
 
@@ -80,31 +80,7 @@ function App() {
 
       {runError && <ErrorMessage message={runError} onDismiss={() => setRunError(null)} />}
 
-      {result && (
-        <section className={`panel ${isStale ? 'stale' : ''}`}>
-          <h2>Results</h2>
-          {isStale && <p className="warning">Inputs have changed. Run again to update.</p>}
-
-          <p>
-            {result.start_date} to {result.end_date} · {dollars(10_000)} became{' '}
-            <strong>{dollars(result.growth[result.growth.length - 1].value)}</strong>
-          </p>
-
-          <table>
-            <tbody>
-              <tr><td>Total return</td><td>{pct(result.metrics.total_return)}</td></tr>
-              <tr><td>CAGR</td><td>{pct(result.metrics.cagr)}</td></tr>
-              <tr><td>Volatility</td><td>{pct(result.metrics.volatility)}</td></tr>
-              <tr><td>Sharpe ratio</td><td>{num(result.metrics.sharpe_ratio)}</td></tr>
-              <tr><td>Max drawdown</td><td>{pct(result.metrics.max_drawdown)}</td></tr>
-            </tbody>
-          </table>
-
-          <p className="muted">
-            {result.growth.length.toLocaleString()} daily data points received. Charts come in the next step.
-          </p>
-        </section>
-      )}
+      {result && <Dashboard result={result} isStale={isStale} />}
 
       <details className="panel">
         <summary>Request preview</summary>
