@@ -1,14 +1,16 @@
 import { dollars, longDate, num, pct } from '../../lib/format'
-import type { BacktestResponse } from '../../types/api'
+import type { PortfolioResult } from '../../types/api'
 
 interface Props {
-  result: BacktestResponse
+  portfolio: PortfolioResult
+  startDate: string
+  endDate: string
   startValue: number
 }
 
-export function MetricTiles({ result, startValue }: Props) {
-  const m = result.metrics
-  const endValue = result.growth[result.growth.length - 1].value
+export function MetricTiles({ portfolio, startDate, endDate, startValue }: Props) {
+  const m = portfolio.metrics
+  const endValue = portfolio.growth[portfolio.growth.length - 1].value
 
   // Each figure: the number, plus one plain-English line on what it means.
   const figures = [
@@ -23,11 +25,11 @@ export function MetricTiles({ result, startValue }: Props) {
       {/* The headline, set like the face of a certificate */}
       <section className="certificate">
         <p className="certificate-lead">
-          {dollars(startValue)} invested on {longDate(result.start_date)} would have become
+          {dollars(startValue)} invested on {longDate(startDate)} would have become
         </p>
         <p className="certificate-figure">{dollars(endValue)}</p>
         <p className="certificate-foot">
-          by {longDate(result.end_date)}, a total return of {pct(m.total_return, 1)}
+          by {longDate(endDate)}, a total return of {pct(m.total_return, 1)}
         </p>
       </section>
 

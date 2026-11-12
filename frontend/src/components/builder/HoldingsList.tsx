@@ -1,3 +1,4 @@
+import { newRowId } from '../../lib/ids'
 import type { Security } from '../../types/api'
 import type { HoldingRow } from '../../types/portfolio'
 
@@ -7,7 +8,6 @@ interface Props {
   onChange: (holdings: HoldingRow[]) => void
 }
 
-let nextId = 1000
 
 export function HoldingsList({ holdings, securities, onChange }: Props) {
   const total = holdings.reduce((sum, h) => sum + (Number(h.weight) || 0), 0)
@@ -22,7 +22,7 @@ export function HoldingsList({ holdings, securities, onChange }: Props) {
   }
 
   function addRow() {
-    onChange([...holdings, { id: nextId++, ticker: '', weight: '' }])
+    onChange([...holdings, { id: newRowId(), ticker: '', weight: '' }])
   }
 
   // The backtest can only start once every holding has data:
@@ -34,9 +34,9 @@ export function HoldingsList({ holdings, securities, onChange }: Props) {
   )
 
   return (
-    <section className="panel">
-      <h2>Holdings</h2>
-
+    // No panel or heading here: the parent decides how to frame the list,
+    // so the same editor works for your portfolio and for custom comparisons.
+    <>
       <table className="holdings">
         <thead>
           <tr>
@@ -92,6 +92,6 @@ export function HoldingsList({ holdings, securities, onChange }: Props) {
           {chosen.length > 1 && ` (limited by ${youngest.ticker}, the youngest holding)`}
         </p>
       )}
-    </section>
+    </>
   )
 }

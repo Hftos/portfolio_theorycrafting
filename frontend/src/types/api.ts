@@ -48,3 +48,47 @@ export interface Security {
   last_date: string
   num_days: number
 }
+
+// ---------- Comparison (POST /api/compare, GET /api/presets) ----------
+
+export interface PortfolioIn {
+  name: string
+  holdings: Holding[]
+}
+
+export interface CompareRequest {
+  portfolios: PortfolioIn[]
+  start_date?: string | null
+  end_date?: string | null
+  rebalance?: Rebalance
+  risk_free_rate?: number
+  start_value?: number
+}
+
+export interface PortfolioResult {
+  name: string
+  weights: Record<string, number>
+  metrics: Metrics
+  growth: Point[]
+  drawdown: Point[]
+  correlation: Record<string, Record<string, number | null>>
+  asset_metrics: Record<string, Metrics>
+}
+
+export interface CompareResponse {
+  start_date: string
+  end_date: string
+  limited_by: string
+  rebalance: Rebalance
+  portfolios: PortfolioResult[]
+}
+
+export interface Preset {
+  id: string
+  name: string
+  description: string
+  holdings: Holding[]
+  available: boolean
+  missing: string[]
+  first_date: string | null
+}

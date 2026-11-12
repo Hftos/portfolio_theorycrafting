@@ -1,6 +1,13 @@
 // The only file that talks to the backend.
 
-import type { BacktestRequest, BacktestResponse, Security } from '../types/api'
+import type {
+  BacktestRequest,
+  BacktestResponse,
+  CompareRequest,
+  CompareResponse,
+  Preset,
+  Security,
+} from '../types/api'
 
 export class ApiError extends Error {}
 
@@ -48,6 +55,17 @@ export function getSecurities(): Promise<Security[]> {
 
 export function runBacktest(req: BacktestRequest): Promise<BacktestResponse> {
   return request<BacktestResponse>('/api/backtest', {
+    method: 'POST',
+    body: JSON.stringify(req),
+  })
+}
+
+export function getPresets(): Promise<Preset[]> {
+  return request<Preset[]>('/api/presets')
+}
+
+export function runCompare(req: CompareRequest): Promise<CompareResponse> {
+  return request<CompareResponse>('/api/compare', {
     method: 'POST',
     body: JSON.stringify(req),
   })

@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
 
-import { getSecurities, runBacktest } from './api/client'
+import { getPresets, getSecurities, runCompare } from './api/client'
 import { HoldingsList } from './components/builder/HoldingsList'
 import { SettingsPanel } from './components/builder/SettingsPanel'
 import { ErrorMessage } from './components/common/ErrorMessage'
+import { ComparisonPanel } from './components/comparison/ComparisonPanel'
 import { Dashboard } from './components/dashboard/Dashboard'
-import { buildRequest } from './lib/buildRequest'
-import type { BacktestResponse, Security } from './types/api'
-import type { HoldingRow, Settings } from './types/portfolio'
+import { buildRequest, YOUR_PORTFOLIO } from './lib/buildRequest'
+import { SERIES_COLORS } from './lib/chartTheme'
+import type { CompareResponse, Preset, Security } from './types/api'
+import type { Comparison, HoldingRow, SeriesMeta, Settings } from './types/portfolio'
 
 const STARTING_HOLDINGS: HoldingRow[] = [
   { id: 1, ticker: 'SPY', weight: '60' },
@@ -22,27 +24,34 @@ const STARTING_SETTINGS: Settings = {
 }
 
 function App() {
-  // Ticker list from the backend
+  // Reference data from the backend
   const [securities, setSecurities] = useState<Security[]>([])
+  const [presets, setPresets] = useState<Preset[]>([])
   const [loadError, setLoadError] = useState<string | null>(null)
 
   // What the user is editing
   const [holdings, setHoldings] = useState<HoldingRow[]>(STARTING_HOLDINGS)
+  const [comparisons, setComparisons] = useState<Comparison[]>([])
   const [settings, setSettings] = useState<Settings>(STARTING_SETTINGS)
 
-  // The backtest run
+  // The run
   const [running, setRunning] = useState(false)
-  const [result, setResult] = useState<BacktestResponse | null>(null)
+  const [result, setResult] = useState<CompareResponse | null>(null)
+  const [series, setSeries] = useState<SeriesMeta[]>([]) // names and colors, as of the last run
   const [runError, setRunError] = useState<string | null>(null)
   const [lastRunRequest, setLastRunRequest] = useState<string | null>(null)
 
+  // Load tickers and presets once, when the page first opens.
   useEffect(() => {
-    getSecurities()
-      .then(setSecurities)
+    Promise.all([getSecurities(), getPresets()])
+      .then(([s, p]) => {
+        setSecurities(s)
+        setPresets(p)
+      })
       .catch((e: Error) => setLoadError(e.message))
   }, [])
 
-  const { request, problems } = buildRequest(holdings, settings)
+  const { request, problems } = buildRequest(holdings, comparisons, settings)
 
   // Have the inputs changed since the results on screen were calculated?
   const isStale = result !== null && JSON.stringify(request) !== lastRunRequest
@@ -51,8 +60,14 @@ function App() {
     setRunning(true)
     setRunError(null)
     try {
-      const response = await runBacktest(request)
+      const response = await runCompare(request)
       setResult(response)
+      // Remember each portfolio's color as it was at run time, so editing
+      // comparisons afterwards doesn't recolor the results on screen.
+      setSeries([
+        { name: YOUR_PORTFOLIO, color: SERIES_COLORS[0] },
+        ...comparisons.map((c) => ({ name: c.name.trim(), color: SERIES_COLORS[c.colorSlot] })),
+      ])
       setLastRunRequest(JSON.stringify(request))
     } catch (e) {
       setRunError(e instanceof Error ? e.message : String(e))
@@ -72,12 +87,26 @@ function App() {
         {/* Left column: building the portfolio */}
         <aside className="builder-column">
           {loadError && <ErrorMessage message={loadError} />}
-          <HoldingsList holdings={holdings} securities={securities} onChange={setHoldings} />
+
+          <section className="panel">
+            <h2>
+              <span className="swatch" style={{ background: SERIES_COLORS[0] }} aria-hidden="true" /> Your portfolio
+            </h2>
+            <HoldingsList holdings={holdings} securities={securities} onChange={setHoldings} />
+          </section>
+
+          <ComparisonPanel
+            comparisons={comparisons}
+            presets={presets}
+            securities={securities}
+            onChange={setComparisons}
+          />
+
           <SettingsPanel settings={settings} onChange={setSettings} />
 
           <div className="run-bar">
             <button type="button" className="primary" onClick={handleRun} disabled={running || problems.length > 0}>
-              {running ? 'Running…' : 'Run backtest'}
+              {running ? 'Running…' : comparisons.length > 0 ? 'Run comparison' : 'Run backtest'}
             </button>
             {problems.length > 0 && <p className="error">{problems[0]}</p>}
           </div>
@@ -92,13 +121,13 @@ function App() {
         <main className="results-column">
           {runError && <ErrorMessage message={runError} onDismiss={() => setRunError(null)} />}
           {result ? (
-            <Dashboard result={result} isStale={isStale} />
+            <Dashboard result={result} series={series} isStale={isStale} />
           ) : (
             <div className="empty-state">
               <p>No backtest yet.</p>
               <p className="muted">
-                Choose your holdings and weights, then run the backtest. Results appear here: growth, drawdowns, and
-                how each holding contributed.
+                Choose your holdings and weights, add any portfolios to compare against, then run it. Results appear
+                here: growth, drawdowns, and how each holding contributed.
               </p>
             </div>
           )}
