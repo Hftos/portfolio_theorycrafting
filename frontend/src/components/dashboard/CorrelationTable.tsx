@@ -1,4 +1,4 @@
-import { correlationColor } from '../../lib/chartTheme'
+import { correlationColor, correlationTextColor } from '../../lib/chartTheme'
 import { num } from '../../lib/format'
 import type { BacktestResponse } from '../../types/api'
 
@@ -14,8 +14,8 @@ export function CorrelationTable({ correlation }: Props) {
     <section className="panel">
       <h2>Correlation</h2>
       <p className="muted">
-        How closely daily returns move together: +1 in lockstep, 0 unrelated, −1 opposite. Lower correlation means
-        more diversification.
+        How closely daily returns move together: +1 in lockstep, 0 unrelated, −1 opposite. The lower the
+        correlation, the more each holding cushions the others.
       </p>
 
       <table className="correlation">
@@ -34,7 +34,7 @@ export function CorrelationTable({ correlation }: Props) {
               {tickers.map((col) => {
                 const value = correlation[row][col]
                 return (
-                  <td key={col} style={{ background: correlationColor(value) }} title={`${row} vs ${col}: ${num(value)}`}>
+                  <td key={col} style={{ background: correlationColor(value), color: correlationTextColor(value) }} title={`${row} vs ${col}: ${num(value)}`}>
                     {num(value)}
                   </td>
                 )

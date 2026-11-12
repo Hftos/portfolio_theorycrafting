@@ -1,4 +1,3 @@
-import { isPolarCoordinate } from 'recharts/types/util/types'
 import {num, pct} from '../../lib/format'
 import type { BacktestResponse } from '../../types/api'
 

@@ -21,6 +21,18 @@ function logTicks(data: Point[]): { domain: [number, number]; ticks: number[] } 
   return { domain: [low, high], ticks: steps.filter((t) => t >= low && t <= high) }
 }
 
+// Linear ticks on round steps ($5K, $10K, $20K, $25K...) from $0 to just above the data.
+function linearTicks(data: Point[]): { domain: [number, number]; ticks: number[] } {
+  const max = Math.max(...data.map((p) => p.value))
+  const rough = max / 5
+  const magnitude = 10 ** Math.floor(Math.log10(rough))
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * magnitude).find((s) => s >= rough) ?? rough
+  const top = Math.ceil(max / step) * step
+  const ticks: number[] = []
+  for (let t = 0; t <= top + step / 2; t += step) ticks.push(t)
+  return { domain: [0, top], ticks }
+}
+
 interface Props {
   data: Point[]
 }
@@ -28,7 +40,7 @@ interface Props {
 export function GrowthChart({ data }: Props) {
   // Log scale shows equal % moves as equal heights, so early years aren't flattened.
   const [logScale, setLogScale] = useState(false)
-  const log = logTicks(data)
+  const axis = logScale ? logTicks(data) : linearTicks(data)
 
   return (
     <section className="panel">
@@ -54,9 +66,8 @@ export function GrowthChart({ data }: Props) {
           <YAxis
             scale={logScale ? 'log' : 'linear'}
             // Linear starts at $0 so heights are honest; log can't include 0.
-            domain={logScale ? log.domain : [0, 'auto']}
-            ticks={logScale ? log.ticks : undefined}
-            tickCount={6}
+            domain={axis.domain}
+            ticks={axis.ticks}
             interval={0}
             tickFormatter={dollarsCompact}
             tick={tickStyle}

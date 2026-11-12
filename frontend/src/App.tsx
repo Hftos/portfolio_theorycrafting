@@ -62,31 +62,49 @@ function App() {
   }
 
   return (
-    <main>
-      <h1>Portfolio Theorycrafter</h1>
-      {loadError && <ErrorMessage message={loadError} />}
+    <div className="page">
+      <header className="masthead">
+        <h1>Portfolio Theorycrafter</h1>
+        <p>Build a portfolio and see how it would have fared through real market history.</p>
+      </header>
 
-      <div className="builder">
-        <HoldingsList holdings={holdings} securities={securities} onChange={setHoldings} />
-        <SettingsPanel settings={settings} onChange={setSettings} />
+      <div className="layout">
+        {/* Left column: building the portfolio */}
+        <aside className="builder-column">
+          {loadError && <ErrorMessage message={loadError} />}
+          <HoldingsList holdings={holdings} securities={securities} onChange={setHoldings} />
+          <SettingsPanel settings={settings} onChange={setSettings} />
+
+          <div className="run-bar">
+            <button type="button" className="primary" onClick={handleRun} disabled={running || problems.length > 0}>
+              {running ? 'Running…' : 'Run backtest'}
+            </button>
+            {problems.length > 0 && <p className="error">{problems[0]}</p>}
+          </div>
+
+          <details className="preview">
+            <summary>Request preview</summary>
+            <pre>{JSON.stringify(request, null, 2)}</pre>
+          </details>
+        </aside>
+
+        {/* Right column: results */}
+        <main className="results-column">
+          {runError && <ErrorMessage message={runError} onDismiss={() => setRunError(null)} />}
+          {result ? (
+            <Dashboard result={result} isStale={isStale} />
+          ) : (
+            <div className="empty-state">
+              <p>No backtest yet.</p>
+              <p className="muted">
+                Choose your holdings and weights, then run the backtest. Results appear here: growth, drawdowns, and
+                how each holding contributed.
+              </p>
+            </div>
+          )}
+        </main>
       </div>
-
-      <div className="run-bar">
-        <button type="button" className="primary" onClick={handleRun} disabled={running || problems.length > 0}>
-          {running ? 'Running…' : 'Run backtest'}
-        </button>
-        {problems.length > 0 && <span className="error">{problems[0]}</span>}
-      </div>
-
-      {runError && <ErrorMessage message={runError} onDismiss={() => setRunError(null)} />}
-
-      {result && <Dashboard result={result} isStale={isStale} />}
-
-      <details className="panel">
-        <summary>Request preview</summary>
-        <pre>{JSON.stringify(request, null, 2)}</pre>
-      </details>
-    </main>
+    </div>
   )
 }
 

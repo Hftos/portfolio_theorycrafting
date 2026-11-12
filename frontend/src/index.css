@@ -1,186 +1,406 @@
-/* Global styles. Kept simple for now; real layout comes in step 7. */
+/*
+  Portfolio Theorycrafter: styled after The Money-Printing Press.
+  A Victorian ledger and bond certificate: parchment, ink, burgundy, gold.
+  Square corners, hairline rules, no shadows, one ornate element (the certificate).
+*/
+
+@import '@fontsource/eb-garamond/400.css';
+@import '@fontsource/eb-garamond/400-italic.css';
+@import '@fontsource/eb-garamond/500.css';
+@import '@fontsource/eb-garamond/600.css';
 
 :root {
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  line-height: 1.5;
-  color: #1a1a1a;
-  background: #fafafa;
+  --parchment: #ede4cf; /* page */
+  --paper: #f8f3e6; /* panels */
+  --ink: #241b15; /* text */
+  --ink-faded: #6b5b4b; /* secondary text */
+  --burgundy: #6e1f2c; /* primary accent: title, button, chart line */
+  --burgundy-deep: #561622;
+  --gold: #a0803a; /* rules and frames only, never text */
+  --rule: #cbbb9c; /* hairlines */
+  --warning: #7a5410;
+  --error: #8f1d1d;
+
+  font-family: 'EB Garamond', Garamond, 'Times New Roman', serif;
+  font-size: 18px;
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--parchment);
+  font-variant-numeric: lining-nums;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
 }
 
-main {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
+h1,
+h2 {
+  font-weight: 500;
+  line-height: 1.2;
 }
 
 h2 {
-  font-size: 1.1rem;
-  margin: 0 0 0.75rem;
+  font-size: 1.35rem;
+  margin: 0 0 0.5rem;
 }
 
-.builder {
-  display: grid;
-  grid-template-columns: 3fr 2fr;
-  gap: 1rem;
+p {
+  margin: 0 0 0.5rem;
 }
+
+/* ---------- Page structure ---------- */
+
+.page {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem 4rem;
+}
+
+.masthead {
+  text-align: center;
+  padding-bottom: 1.25rem;
+  margin-bottom: 2rem;
+  border-bottom: 3px double var(--gold);
+}
+
+.masthead h1 {
+  font-size: 2.75rem;
+  color: var(--burgundy);
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+.masthead p {
+  font-style: italic;
+  color: var(--ink-faded);
+  margin: 0.25rem 0 0;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 380px minmax(0, 1fr);
+  gap: 2rem;
+  align-items: start;
+}
+
+/* Grid columns default to the width of their widest content; min-width: 0 lets
+   wide things (tables, the request preview) scroll inside instead of stretching the page. */
+.builder-column,
+.results-column {
+  min-width: 0;
+}
+
+@media (max-width: 960px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding: 1.5rem 1rem 3rem;
+  }
+  .masthead h1 {
+    font-size: 2.1rem;
+  }
+  .panel {
+    padding: 1rem;
+  }
+  .results-column .panel {
+    overflow-x: auto;
+  }
+}
+
+/* ---------- Panels ---------- */
 
 .panel {
-  background: #fff;
-  border: 1px solid #e5e5e5;
-  border-radius: 8px;
-  padding: 1rem 1.25rem;
-  margin-bottom: 1rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
-table {
-  border-collapse: collapse;
-  font-variant-numeric: tabular-nums;
+.muted {
+  color: var(--ink-faded);
 }
 
-th,
-td {
-  text-align: left;
-  padding: 0.35rem 1rem 0.35rem 0;
+.warning {
+  color: var(--warning);
 }
 
-.holdings input {
-  width: 6rem;
+.error {
+  color: var(--error);
 }
+
+/* ---------- Form controls ---------- */
 
 label {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  margin-bottom: 0.75rem;
-  font-size: 0.9rem;
+  gap: 0.2rem;
+  margin-bottom: 0.9rem;
+  font-variant-caps: small-caps;
+  letter-spacing: 0.03em;
+  color: var(--ink-faded);
+}
+
+label .muted {
+  font-variant-caps: normal;
+  font-style: italic;
+  letter-spacing: 0;
 }
 
 input,
 select,
 button {
   font: inherit;
+  color: var(--ink);
+  border-radius: 0;
+}
+
+input,
+select {
+  background: #fffdf7;
+  border: 1px solid var(--rule);
   padding: 0.3rem 0.5rem;
+  font-variant-caps: normal;
+  letter-spacing: 0;
+}
+
+input:focus-visible,
+select:focus-visible,
+button:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--burgundy);
+  outline-offset: 2px;
+}
+
+button {
+  background: var(--paper);
+  border: 1px solid var(--ink-faded);
+  padding: 0.3rem 0.9rem;
+  cursor: pointer;
+}
+
+button:hover {
+  border-color: var(--ink);
+}
+
+button.primary {
+  width: 100%;
+  background: var(--burgundy);
+  border: 1px solid var(--burgundy-deep);
+  color: var(--paper);
+  font-size: 1.1rem;
+  padding: 0.6rem 1rem;
+  letter-spacing: 0.02em;
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--burgundy-deep);
+}
+
+button.primary:disabled {
+  background: #b9a6a0;
+  border-color: #b9a6a0;
+  cursor: not-allowed;
 }
 
 button.link {
   background: none;
   border: none;
-  color: #b42318;
-  cursor: pointer;
+  color: var(--burgundy);
   padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---------- Builder ---------- */
+
+table {
+  border-collapse: collapse;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+th {
+  font-weight: 500;
+  font-variant-caps: small-caps;
+  letter-spacing: 0.03em;
+  color: var(--ink-faded);
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.35rem 0.75rem 0.35rem 0;
+}
+
+.holdings {
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.holdings select {
+  width: 7rem;
+}
+
+.holdings input {
+  width: 5rem;
+}
+
+.run-bar {
+  margin-bottom: 1.5rem;
+}
+
+.run-bar .error {
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+.preview summary {
+  cursor: pointer;
+  color: var(--ink-faded);
+  font-style: italic;
 }
 
 pre {
-  background: #f4f4f4;
+  background: var(--paper);
+  border: 1px solid var(--rule);
   padding: 0.75rem;
-  border-radius: 6px;
   overflow-x: auto;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
-.muted {
-  color: #6b6b6b;
-}
-
-.warning {
-  color: #9a6700;
-}
-
-.error {
-  color: #b42318;
-}
-
-/* ---------- Run step ---------- */
-
-.run-bar {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-button.primary {
-  background: #1f4fd1;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 0.55rem 1.25rem;
-  cursor: pointer;
-}
-
-button.primary:disabled {
-  background: #9aa9d6;
-  cursor: not-allowed;
-}
+/* ---------- Errors and empty state ---------- */
 
 .error-box {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
-  background: #fef3f2;
-  border: 1px solid #fecdca;
-  color: #b42318;
-  border-radius: 6px;
+  background: #f6e7e2;
+  border: 1px solid #d8aea4;
+  border-left: 4px solid var(--error);
+  color: var(--error);
   padding: 0.6rem 0.9rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.error-box button.link {
+  color: var(--error);
+  text-decoration: none;
+}
+
+.empty-state {
+  border: 1px solid var(--rule);
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.empty-state p:first-child {
+  font-size: 1.5rem;
+  color: var(--burgundy);
+}
+
+.empty-state .muted {
+  max-width: 34rem;
+  margin: 0 auto;
+  font-style: italic;
 }
 
 .stale {
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
-summary {
-  cursor: pointer;
-  font-weight: 600;
+/* ---------- The certificate: the one ornate element ---------- */
+
+.certificate {
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  outline: 1px solid var(--gold);
+  outline-offset: -8px;
+  padding: 2.25rem 2rem 2rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
 }
 
-/* ---------- Dashboard ---------- */
+.certificate-lead {
+  font-style: italic;
+  color: var(--ink-faded);
+}
 
-.hero-label {
+.certificate-figure {
+  font-size: 4rem;
+  font-weight: 500;
+  color: var(--burgundy);
+  line-height: 1.05;
+  margin: 0.25rem 0 0.5rem;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.certificate-foot {
+  color: var(--ink-faded);
   margin: 0;
-  color: #52514e;
 }
 
-.hero-number {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin: 0;
-  line-height: 1.2;
-  font-variant-numeric: tabular-nums;
-}
+/* ---------- Headline figures ---------- */
 
-.tiles {
+.figures {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 0.75rem;
-  margin-top: 1rem;
+  margin: 0 0 1.5rem;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
 }
 
-.tile {
-  border: 1px solid #e5e5e5;
-  border-radius: 8px;
-  padding: 0.75rem;
+.figure {
+  padding: 0.9rem 1rem;
 }
 
-.tile-label {
+.figure + .figure {
+  border-left: 1px solid var(--rule);
+}
+
+.figure dt {
+  font-variant-caps: small-caps;
+  letter-spacing: 0.03em;
+  color: var(--ink-faded);
+}
+
+.figure dd {
+  margin: 0;
+}
+
+.figure-value {
+  font-size: 1.85rem;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.figure-hint {
   font-size: 0.85rem;
-  color: #52514e;
+  font-style: italic;
+  color: var(--ink-faded);
+  line-height: 1.35;
 }
 
-.tile-value {
-  font-size: 1.5rem;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
+@media (max-width: 700px) {
+  .figures {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .figure:nth-child(3) {
+    border-left: none;
+  }
+  .certificate-figure {
+    font-size: 3rem;
+  }
 }
 
-.tile-hint {
-  font-size: 0.8rem;
-  color: #6b6b6b;
-}
+/* ---------- Charts ---------- */
 
 .chart-header {
   display: flex;
@@ -193,52 +413,75 @@ label.toggle {
   align-items: center;
   gap: 0.4rem;
   margin: 0;
+  white-space: nowrap;
+}
+
+.recharts-text {
+  font-family: 'EB Garamond', Garamond, serif;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 .chart-tooltip {
-  background: #fff;
-  border: 1px solid #e1e0d9;
-  border-radius: 6px;
-  padding: 0.4rem 0.6rem;
-  font-size: 0.85rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  padding: 0.35rem 0.65rem;
+  font-size: 0.9rem;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
-table.stats th,
+/* ---------- Results tables ---------- */
+
+table.stats {
+  width: 100%;
+}
+
+table.stats thead th {
+  border-bottom: 1px solid var(--ink);
+}
+
 table.stats td {
-  padding-right: 1.5rem;
+  border-bottom: 1px solid var(--rule);
 }
 
+table.stats th:not(:first-child),
 table.stats td:not(:first-child) {
   text-align: right;
 }
 
 .total-row td {
   font-weight: 600;
-  border-top: 1px solid #c3c2b7;
+  border-top: 1px solid var(--ink);
+  border-bottom: 3px double var(--ink);
 }
 
 table.correlation td {
   text-align: center;
-  min-width: 4rem;
+  min-width: 4.5rem;
   padding: 0.5rem;
-  border: 2px solid #fff;
+  border: 2px solid var(--paper);
+}
+
+table.correlation th {
+  padding-right: 0.75rem;
+}
+
+table.correlation thead th {
+  text-align: center;
 }
 
 .scale-legend {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.8rem;
-  color: #52514e;
+  font-size: 0.85rem;
+  color: var(--ink-faded);
   margin-top: 0.5rem;
 }
 
 .scale-bar {
   width: 160px;
-  height: 10px;
-  border-radius: 5px;
-  background: linear-gradient(to right, #e34948, #f0efec, #2a78d6);
+  height: 8px;
+  background: linear-gradient(to right, #6e1f2c, #ece3cf, #2f5a4c);
 }
 
 .sr-only {

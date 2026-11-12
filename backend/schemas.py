@@ -1,7 +1,17 @@
+"""The shapes of data going in and out of the API.
+
+FastAPI uses these to validate requests automatically: if the frontend sends a
+negative weight or an unknown rebalance option, the request is rejected with a
+clear error before any of our code runs.
+"""
+
 from datetime import date
 from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+
+# ---------- Requests ----------
 
 class Holding(BaseModel):
     ticker: str = Field(min_length=1, max_length=10, examples=["SPY"])
@@ -12,13 +22,14 @@ class Holding(BaseModel):
     def clean_ticker(cls, v: str) -> str:
         return v.strip().upper()
 
+
 class BacktestRequest(BaseModel):
     holdings: list[Holding] = Field(min_length=1, max_length=20)
     start_date: date | None = Field(default=None, description="Leave empty for the earliest shared date")
-    end_date: date | None=None
+    end_date: date | None = None
     rebalance: Literal["none", "monthly", "quarterly", "annual"] = "annual"
     risk_free_rate: float = Field(default=0.02, ge=0, le=0.20, description="Annual, as a decimal (0.02 = 2%)")
-    start_value: float = Field(default=10_000, gt =0)
+    start_value: float = Field(default=10_000, gt=0)
 
     @model_validator(mode="after")
     def check(self):
@@ -26,30 +37,35 @@ class BacktestRequest(BaseModel):
         if len(tickers) != len(set(tickers)):
             raise ValueError("Each ticker can only appear once.")
         if self.start_date and self.end_date and self.start_date >= self.end_date:
-            raise ValueError("start_date must be before end_date")
+            raise ValueError("start_date must be before end_date.")
         return self
 
     model_config = {
         "json_schema_extra": {
             "examples": [{
-                "holdings": [{"ticker": "SPY", "weight":60}, {"ticker": "AGG", "weight": 40}],
+                "holdings": [{"ticker": "SPY", "weight": 60}, {"ticker": "AGG", "weight": 40}],
                 "start_date": "2007-01-01",
                 "rebalance": "annual",
-                "risk_free_rate": 0.02,  
+                "risk_free_rate": 0.02,
             }]
         }
     }
+
+
+# ---------- Responses ----------
 
 class Metrics(BaseModel):
     total_return: float
     cagr: float
     volatility: float
-    sharpe_ratio: float | None
-    max_drawdown: float 
+    sharpe_ratio: float | None   # None when it can't be computed (zero volatility)
+    max_drawdown: float
+
 
 class Point(BaseModel):
     date: date
     value: float
+
 
 class BacktestResponse(BaseModel):
     start_date: date
@@ -62,8 +78,81 @@ class BacktestResponse(BaseModel):
     correlation: dict[str, dict[str, float | None]]
     asset_metrics: dict[str, Metrics]
 
+
+# ---------- Comparison ----------
+
+class PortfolioIn(BaseModel):
+    name: str = Field(min_length=1, max_length=40, examples=["My portfolio"])
+    holdings: list[Holding] = Field(min_length=1, max_length=20)
+
+    @model_validator(mode="after")
+    def check(self):
+        tickers = [h.ticker for h in self.holdings]
+        if len(tickers) != len(set(tickers)):
+            raise ValueError(f"{self.name}: each ticker can only appear once.")
+        return self
+
+
+class CompareRequest(BaseModel):
+    portfolios: list[PortfolioIn] = Field(min_length=1, max_length=6)
+    start_date: date | None = None
+    end_date: date | None = None
+    rebalance: Literal["none", "monthly", "quarterly", "annual"] = "annual"
+    risk_free_rate: float = Field(default=0.02, ge=0, le=0.20)
+    start_value: float = Field(default=10_000, gt=0)
+
+    @model_validator(mode="after")
+    def check(self):
+        names = [p.name for p in self.portfolios]
+        if len(names) != len(set(names)):
+            raise ValueError("Each portfolio needs a different name.")
+        if self.start_date and self.end_date and self.start_date >= self.end_date:
+            raise ValueError("start_date must be before end_date.")
+        return self
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [{
+                "portfolios": [
+                    {"name": "My portfolio", "holdings": [{"ticker": "SPY", "weight": 70}, {"ticker": "TLT", "weight": 30}]},
+                    {"name": "60/40", "holdings": [{"ticker": "SPY", "weight": 60}, {"ticker": "AGG", "weight": 40}]},
+                ],
+                "rebalance": "annual",
+            }]
+        }
+    }
+
+
+class PortfolioResult(BaseModel):
+    name: str
+    weights: dict[str, float]
+    metrics: Metrics
+    growth: list[Point]
+    drawdown: list[Point]
+    correlation: dict[str, dict[str, float | None]]
+    asset_metrics: dict[str, Metrics]
+
+
+class CompareResponse(BaseModel):
+    start_date: date
+    end_date: date
+    limited_by: str = Field(description="The ticker with the shortest history, which sets the start date")
+    rebalance: str
+    portfolios: list[PortfolioResult]
+
+
+class Preset(BaseModel):
+    id: str
+    name: str
+    description: str
+    holdings: list[Holding]
+    available: bool = Field(description="False if any of its tickers aren't in the database yet")
+    missing: list[str]
+    first_date: date | None
+
+
 class Security(BaseModel):
     ticker: str
     first_date: date
     last_date: date
-    num_days: int 
+    num_days: int

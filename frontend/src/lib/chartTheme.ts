@@ -1,18 +1,18 @@
-// Colors and styles shared by every chart, so they all look like one system.
+// Colors shared by every chart, matched to the page palette in index.css.
 
 export const theme = {
-  series: '#2a78d6', // the one data color for single-series charts
-  grid: '#e1e0d9', // hairline gridlines: recessive, one step off the surface
-  axis: '#c3c2b7', // baseline / axis line
-  textPrimary: '#0b0b0b',
-  textSecondary: '#52514e',
-  surface: '#ffffff',
+  series: '#6e1f2c', // burgundy: the one data color for single-series charts
+  grid: '#ddd0b6', // hairline gridlines, one step off the paper
+  axis: '#a8987c', // baseline / axis line
+  textPrimary: '#241b15', // ink
+  textSecondary: '#6b5b4b', // faded ink
+  surface: '#f8f3e6', // paper
 }
 
-// Diverging scale for correlations: red (-1) -> gray (0) -> blue (+1).
-const NEGATIVE = [227, 73, 72] // #e34948
-const NEUTRAL = [240, 239, 236] // #f0efec
-const POSITIVE = [42, 120, 214] // #2a78d6
+// Diverging scale for correlations: burgundy (-1) -> paper (0) -> banknote green (+1).
+const NEGATIVE = [110, 31, 44] // #6e1f2c
+const NEUTRAL = [236, 227, 207] // #ece3cf
+const POSITIVE = [47, 90, 76] // #2f5a4c
 
 export function correlationColor(value: number | null): string {
   if (value === null) return `rgb(${NEUTRAL.join(',')})`
@@ -22,5 +22,10 @@ export function correlationColor(value: number | null): string {
   return `rgb(${rgb.join(',')})`
 }
 
-// Axis tick text styling for Recharts
-export const tickStyle = { fill: theme.textSecondary, fontSize: 12 }
+// Dark cells need light text to stay readable.
+export function correlationTextColor(value: number | null): string {
+  return value !== null && Math.abs(value) > 0.55 ? theme.surface : theme.textPrimary
+}
+
+// Axis tick text for Recharts
+export const tickStyle = { fill: theme.textSecondary, fontSize: 13 }

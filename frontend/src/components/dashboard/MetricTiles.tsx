@@ -10,33 +10,36 @@ export function MetricTiles({ result, startValue }: Props) {
   const m = result.metrics
   const endValue = result.growth[result.growth.length - 1].value
 
-  // Each tile: the number, plus one plain-English line on what it means.
-  const tiles = [
-    { label: 'CAGR', value: pct(m.cagr), hint: 'Average yearly growth, compounded' },
-    { label: 'Volatility', value: pct(m.volatility), hint: 'How much returns swing, per year' },
+  // Each figure: the number, plus one plain-English line on what it means.
+  const figures = [
+    { label: 'Annual growth', value: pct(m.cagr), hint: 'Compound annual growth rate (CAGR)' },
+    { label: 'Volatility', value: pct(m.volatility), hint: 'How much returns swing in a year' },
     { label: 'Sharpe ratio', value: num(m.sharpe_ratio), hint: 'Return earned per unit of risk' },
-    { label: 'Max drawdown', value: pct(m.max_drawdown), hint: 'Worst fall from a peak' },
+    { label: 'Max drawdown', value: pct(m.max_drawdown), hint: 'Worst fall from a previous high' },
   ]
 
   return (
-    <section className="panel">
-      <p className="hero-label">
-        {dollars(startValue)} invested on {longDate(result.start_date)} became
-      </p>
-      <p className="hero-number">{dollars(endValue)}</p>
-      <p className="muted">
-        by {longDate(result.end_date)} · total return {pct(m.total_return, 1)}
-      </p>
+    <>
+      {/* The headline, set like the face of a certificate */}
+      <section className="certificate">
+        <p className="certificate-lead">
+          {dollars(startValue)} invested on {longDate(result.start_date)} would have become
+        </p>
+        <p className="certificate-figure">{dollars(endValue)}</p>
+        <p className="certificate-foot">
+          by {longDate(result.end_date)}, a total return of {pct(m.total_return, 1)}
+        </p>
+      </section>
 
-      <div className="tiles">
-        {tiles.map((t) => (
-          <div key={t.label} className="tile">
-            <div className="tile-label">{t.label}</div>
-            <div className="tile-value">{t.value}</div>
-            <div className="tile-hint">{t.hint}</div>
+      <dl className="figures">
+        {figures.map((f) => (
+          <div key={f.label} className="figure">
+            <dt>{f.label}</dt>
+            <dd className="figure-value">{f.value}</dd>
+            <dd className="figure-hint">{f.hint}</dd>
           </div>
         ))}
-      </div>
-    </section>
+      </dl>
+    </>
   )
 }

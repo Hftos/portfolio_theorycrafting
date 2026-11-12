@@ -1,3 +1,5 @@
+"""Tickers to pre-load. Kept small so a full load fits in Tiingo's free tier (50 requests/hour)."""
+
 CORE_TICKERS = [
     # US stocks
     "SPY",   # S&P 500
@@ -18,6 +20,7 @@ CORE_TICKERS = [
     # Real assets
     "GLD",   # Gold
     "VNQ",   # Real estate
+    "DBC",   # Commodities (used by the All-Weather preset)
     # Mutual funds
     "VFIAX", # Vanguard 500 Index (Admiral)
     "FXAIX", # Fidelity 500 Index
