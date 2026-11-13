@@ -108,3 +108,50 @@ export interface Preset {
   missing: string[]
   first_date: string | null
 }
+
+// ---------- Projections (POST /api/project) ----------
+
+export type ProjectionModel = 'bootstrap' | 'normal'
+
+export interface ProjectRequest extends CompareRequest {
+  model: ProjectionModel
+  horizon_years: number
+  monthly_contribution: number // negative = withdrawal
+  return_adjustment: number // added to every year's return; -0.02 = 2% a year less than history
+}
+
+// The five percentile values at one month into the future.
+export interface Band {
+  month: number
+  p5: number
+  p25: number
+  p50: number
+  p75: number
+  p95: number
+}
+
+export interface ProjectionSummary {
+  median_final: number
+  p5_final: number
+  p95_final: number
+  chance_of_loss: number | null
+  chance_of_doubling: number | null
+  chance_of_running_out: number
+}
+
+export interface PortfolioProjection {
+  name: string
+  bands: Band[]
+  summary: ProjectionSummary
+}
+
+export interface ProjectResponse {
+  model: ProjectionModel
+  horizon_years: number
+  paths: number
+  history_start: string
+  history_end: string
+  months_of_history: number
+  total_invested: number
+  portfolios: PortfolioProjection[]
+}

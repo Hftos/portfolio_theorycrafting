@@ -6,6 +6,8 @@ import type {
   CompareRequest,
   CompareResponse,
   Preset,
+  ProjectRequest,
+  ProjectResponse,
   Security,
 } from '../types/api'
 
@@ -66,6 +68,13 @@ export function getPresets(): Promise<Preset[]> {
 
 export function runCompare(req: CompareRequest): Promise<CompareResponse> {
   return request<CompareResponse>('/api/compare', {
+    method: 'POST',
+    body: JSON.stringify(req),
+  })
+}
+
+export function runProjection(req: ProjectRequest): Promise<ProjectResponse> {
+  return request<ProjectResponse>('/api/project', {
     method: 'POST',
     body: JSON.stringify(req),
   })

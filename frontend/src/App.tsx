@@ -8,7 +8,7 @@ import { ComparisonPanel } from './components/comparison/ComparisonPanel'
 import { Dashboard } from './components/dashboard/Dashboard'
 import { buildRequest, YOUR_PORTFOLIO } from './lib/buildRequest'
 import { SERIES_COLORS } from './lib/chartTheme'
-import type { CompareResponse, Preset, Security } from './types/api'
+import type { CompareRequest, CompareResponse, Preset, Security } from './types/api'
 import type { Comparison, HoldingRow, SeriesMeta, Settings } from './types/portfolio'
 
 const STARTING_HOLDINGS: HoldingRow[] = [
@@ -40,6 +40,9 @@ function App() {
   const [series, setSeries] = useState<SeriesMeta[]>([]) // names and colors, as of the last run
   const [runError, setRunError] = useState<string | null>(null)
   const [lastRunRequest, setLastRunRequest] = useState<string | null>(null)
+  // The exact request behind the results on screen; projections reuse it so they
+  // always describe the same portfolios and settings as the rest of the dashboard.
+  const [runRequest, setRunRequest] = useState<CompareRequest | null>(null)
 
   // Load tickers and presets once, when the page first opens.
   useEffect(() => {
@@ -69,6 +72,7 @@ function App() {
         ...comparisons.map((c) => ({ name: c.name.trim(), color: SERIES_COLORS[c.colorSlot] })),
       ])
       setLastRunRequest(JSON.stringify(request))
+      setRunRequest(request)
     } catch (e) {
       setRunError(e instanceof Error ? e.message : String(e))
     } finally {
@@ -120,8 +124,8 @@ function App() {
         {/* Right column: results */}
         <main className="results-column">
           {runError && <ErrorMessage message={runError} onDismiss={() => setRunError(null)} />}
-          {result ? (
-            <Dashboard result={result} series={series} isStale={isStale} />
+          {result && runRequest ? (
+            <Dashboard result={result} series={series} isStale={isStale} runRequest={runRequest} />
           ) : (
             <div className="empty-state">
               <p>No backtest yet.</p>

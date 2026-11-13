@@ -158,6 +158,58 @@ class CompareResponse(BaseModel):
     portfolios: list[PortfolioResult]
 
 
+# ---------- Projections ----------
+
+class ProjectRequest(CompareRequest):
+    """The same portfolios and settings as a comparison, plus how to project them forward."""
+    model: Literal["bootstrap", "normal"] = Field(
+        default="bootstrap",
+        description="bootstrap replays real history in 12-month blocks; normal draws from a bell curve",
+    )
+    horizon_years: int = Field(default=20, ge=1, le=40)
+    monthly_contribution: float = Field(
+        default=0, ge=-1_000_000, le=1_000_000, description="Added each month; negative = withdrawal"
+    )
+    return_adjustment: float = Field(
+        default=0, ge=-0.10, le=0.05, description="Added to every year's return; -0.02 = 2% a year less than history"
+    )
+
+
+class Band(BaseModel):
+    month: int
+    p5: float
+    p25: float
+    p50: float
+    p75: float
+    p95: float
+
+
+class ProjectionSummary(BaseModel):
+    median_final: float
+    p5_final: float
+    p95_final: float
+    chance_of_loss: float | None = Field(description="Share of futures ending below the total invested")
+    chance_of_doubling: float | None
+    chance_of_running_out: float = Field(description="Share of futures where withdrawals empty the account")
+
+
+class PortfolioProjection(BaseModel):
+    name: str
+    bands: list[Band]
+    summary: ProjectionSummary
+
+
+class ProjectResponse(BaseModel):
+    model: str
+    horizon_years: int
+    paths: int
+    history_start: date
+    history_end: date
+    months_of_history: int
+    total_invested: float
+    portfolios: list[PortfolioProjection]
+
+
 class Preset(BaseModel):
     id: str
     name: str

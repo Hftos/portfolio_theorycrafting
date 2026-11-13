@@ -8,7 +8,7 @@ Then open http://localhost:8000/docs
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api import portfolio, presets, securities
+from .api import portfolio, presets, projection, securities
 
 app = FastAPI(title="Portfolio Theorycrafter API", version="0.1.0")
 
@@ -24,6 +24,7 @@ app.add_middleware(
 app.include_router(portfolio.router, prefix="/api", tags=["portfolio"])
 app.include_router(securities.router, prefix="/api", tags=["securities"])
 app.include_router(presets.router, prefix="/api", tags=["presets"])
+app.include_router(projection.router, prefix="/api", tags=["projections"])
 
 
 @app.get("/api/health", tags=["health"])

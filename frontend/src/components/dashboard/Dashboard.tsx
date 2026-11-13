@@ -1,7 +1,8 @@
 import { longDate } from '../../lib/format'
 import { mergeSeries } from '../../lib/series'
-import type { CompareResponse } from '../../types/api'
+import type { CompareRequest, CompareResponse } from '../../types/api'
 import type { SeriesMeta } from '../../types/portfolio'
+import { ProjectionPanel } from '../projection/ProjectionPanel'
 import { AnnualReturnsTable } from './AnnualReturnsTable'
 import { CorrelationTable } from './CorrelationTable'
 import { DrawdownChart } from './DrawdownChart'
@@ -18,10 +19,11 @@ interface Props {
   result: CompareResponse
   series: SeriesMeta[]
   isStale: boolean
+  runRequest: CompareRequest // the request behind these results, reused for projections
 }
 
 // Groups every results view. App only needs to render <Dashboard />.
-export function Dashboard({ result, series, isStale }: Props) {
+export function Dashboard({ result, series, isStale, runRequest }: Props) {
   const yours = result.portfolios[0]
   const comparing = result.portfolios.length > 1
   const growth = mergeSeries(result.portfolios, 'growth') // shared by the growth and rolling charts
@@ -46,6 +48,7 @@ export function Dashboard({ result, series, isStale }: Props) {
       <StatsTable portfolios={result.portfolios} series={series} />
       <GrowthChart rows={growth} series={series} />
       <DrawdownChart rows={mergeSeries(result.portfolios, 'drawdown')} series={series} />
+      <ProjectionPanel baseRequest={runRequest} series={series} />
       <RollingReturnsChart growth={growth} series={series} />
       <AnnualReturnsTable portfolios={result.portfolios} series={series} />
       <HoldingsTable portfolio={yours} />

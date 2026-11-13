@@ -757,3 +757,147 @@ table.years tr.partial td {
 label.toggle select {
   padding: 0.1rem 0.3rem;
 }
+
+/* ---------- Projections ---------- */
+
+.projection.updating .fan-layout,
+.projection.updating .projection-table {
+  opacity: 0.55;
+  transition: opacity 0.15s;
+}
+
+.projection-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1.5rem;
+  margin: 1rem 0 1.25rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin: 0;
+  color: var(--ink);
+  font-variant-caps: normal;
+  letter-spacing: 0;
+}
+
+.control-label {
+  font-variant-caps: small-caps;
+  letter-spacing: 0.03em;
+  color: var(--ink-faded);
+}
+
+.control-hint {
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--ink-faded);
+  margin: 0;
+  line-height: 1.35;
+}
+
+.control input[type='range'] {
+  accent-color: var(--burgundy);
+  padding: 0;
+}
+
+.segmented {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.segmented button {
+  margin-right: -1px; /* touching buttons share one border */
+}
+
+.segmented button[aria-pressed='true'] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+  position: relative;
+}
+
+.portfolio-switch {
+  margin-bottom: 0.75rem;
+}
+
+.fan-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 15rem;
+  gap: 1.25rem;
+  align-items: start;
+  margin-bottom: 1rem;
+}
+
+.levels-title {
+  font-variant-caps: small-caps;
+  letter-spacing: 0.03em;
+  color: var(--ink-faded);
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 0.25rem;
+}
+
+.levels dl {
+  margin: 0;
+}
+
+.level {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 0.75rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.level dt {
+  font-weight: 500;
+}
+
+.level dd {
+  margin: 0;
+}
+
+.level-value {
+  text-align: right;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.level-note {
+  grid-column: 1 / -1;
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--ink-faded);
+}
+
+/* The expected outcome is the one to read first. */
+.level-p50 dt,
+.level-p50 .level-value {
+  color: var(--burgundy);
+  font-weight: 600;
+}
+
+.level-invested {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+table.projection-table th:not(:first-child),
+table.projection-table td:not(:first-child) {
+  text-align: right;
+}
+
+@media (max-width: 1100px) {
+  .fan-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .projection-controls {
+    grid-template-columns: 1fr;
+  }
+}
