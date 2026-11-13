@@ -41,3 +41,12 @@ export function correlationTextColor(value: number | null): string {
 
 // Axis tick text for Recharts
 export const tickStyle = { fill: theme.textSecondary, fontSize: 13 }
+
+// Yearly returns: green for gains, burgundy for losses, deepest at ±30% or more.
+export function returnCellColor(value: number): string {
+  return correlationColor(Math.max(-1, Math.min(1, value / 0.3)))
+}
+
+export function returnTextColor(value: number): string {
+  return correlationTextColor(Math.max(-1, Math.min(1, value / 0.3)))
+}

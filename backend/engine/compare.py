@@ -23,10 +23,13 @@ def run_comparison(
     rebalance: str = "annual",
     risk_free_rate: float = 0.0,
     start_value: float = 10_000,
+    benchmark: str | None = None,
 ) -> dict:
     """Backtest each portfolio over the dates they all share.
 
     portfolios: [{"name": "Mine", "weights": {"SPY": 60, "AGG": 40}}, ...]
+    benchmark:  ticker to measure beta against (e.g. "SPY"). It doesn't limit
+                the shared dates unless a portfolio actually holds it.
     """
     all_tickers = sorted({t for p in portfolios for t in p["weights"]})
     missing = [t for t in all_tickers if t not in prices.columns or prices[t].isna().all()]
@@ -38,6 +41,10 @@ def run_comparison(
         raise ValueError("These portfolios have no overlapping price history.")
     _, limiting = common_start(prices, all_tickers)
 
+    bench_returns = None
+    if benchmark and benchmark in prices.columns:
+        bench_returns = prices[benchmark].pct_change().reindex(shared.index)
+
     results = []
     for p in portfolios:
         result = run_backtest(
@@ -46,6 +53,7 @@ def run_comparison(
             rebalance=rebalance,
             risk_free_rate=risk_free_rate,
             start_value=start_value,
+            benchmark_returns=bench_returns,
         )
         results.append({"name": p["name"], **result})
 

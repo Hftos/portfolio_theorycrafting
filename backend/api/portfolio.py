@@ -10,6 +10,14 @@ from . import serialize
 
 router = APIRouter()
 
+BENCHMARK = "SPY"  # beta is measured against the S&P 500
+
+
+def _with_benchmark(tickers: list[str]) -> list[str]:
+    """Also load the benchmark's prices if it's in the database, so beta can be computed."""
+    known = {s["ticker"] for s in list_securities()}
+    return tickers + [BENCHMARK] if BENCHMARK in known and BENCHMARK not in tickers else tickers
+
 
 def _check_tickers(tickers: list[str], prices) -> None:
     """Explain missing data precisely: unknown ticker vs. no prices in the chosen dates."""
@@ -29,14 +37,16 @@ def backtest(req: BacktestRequest) -> dict:
     end = req.end_date.isoformat() if req.end_date else None
 
     try:
-        prices = load_prices(list(weights), start=start, end=end)
+        prices = load_prices(_with_benchmark(list(weights)), start=start, end=end)
         _check_tickers(list(weights), prices)
+        bench = prices[BENCHMARK].pct_change() if BENCHMARK in prices.columns else None
         result = run_backtest(
             prices,
             weights,
             rebalance=req.rebalance,
             risk_free_rate=req.risk_free_rate,
             start_value=req.start_value,
+            benchmark_returns=bench,
         )
     except DatabaseNotFound as e:
         raise HTTPException(status_code=503, detail=str(e))
@@ -61,7 +71,7 @@ def compare(req: CompareRequest) -> dict:
     end = req.end_date.isoformat() if req.end_date else None
 
     try:
-        prices = load_prices(tickers, start=start, end=end)
+        prices = load_prices(_with_benchmark(tickers), start=start, end=end)
         _check_tickers(tickers, prices)
         result = run_comparison(
             prices,
@@ -69,6 +79,7 @@ def compare(req: CompareRequest) -> dict:
             rebalance=req.rebalance,
             risk_free_rate=req.risk_free_rate,
             start_value=req.start_value,
+            benchmark=BENCHMARK,
         )
     except DatabaseNotFound as e:
         raise HTTPException(status_code=503, detail=str(e))

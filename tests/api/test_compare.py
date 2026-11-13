@@ -118,3 +118,17 @@ def test_chart_data_is_weekly_but_keeps_the_worst_drawdown(client):
     assert len(p["growth"]) == len(p["drawdown"])
     # The worst weekly drawdown must equal the exact daily max drawdown
     assert min(pt["value"] for pt in p["drawdown"]) == pytest.approx(p["metrics"]["max_drawdown"])
+
+
+def test_beta_is_measured_against_spy_when_loaded(client):
+    # Add SPY to the test database as an exact copy of STOCK: STOCK's beta must then be 1.
+    con = duckdb.connect(str(db.DB_PATH))
+    con.execute("INSERT INTO prices SELECT 'SPY', date, adj_close FROM prices WHERE ticker = 'STOCK'")
+    con.execute("INSERT INTO securities SELECT 'SPY', first_date, last_date, num_rows, now() FROM securities WHERE ticker = 'STOCK'")
+    con.close()
+
+    r = client.post("/api/compare", json={"portfolios": [portfolio("A", STOCK=100), portfolio("B", BOND=100)]})
+    a, b = r.json()["portfolios"]
+    assert a["metrics"]["beta"] == pytest.approx(1.0)
+    assert abs(b["metrics"]["beta"]) < 0.5
+    assert r.json()["start_date"] == "2020-01-01"   # loading SPY didn't change the shared dates

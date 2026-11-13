@@ -35,3 +35,18 @@ export function longDate(iso: string): string {
 export function year(iso: string): string {
   return iso.slice(0, 4)
 }
+
+// 0.0747 -> "+7.47%" (signed, for returns that can go either way)
+export function signedPct(value: number | null, digits = 1): string {
+  if (value === null || Number.isNaN(value)) return '—'
+  const sign = value > 0 ? '+' : value < 0 ? '−' : ''
+  return `${sign}${Math.abs(value * 100).toFixed(digits)}%`
+}
+
+// 45 -> "45 days", 400 -> "13 months", 1600 -> "4.4 years"
+export function duration(days: number): string {
+  if (days === 0) return 'none'
+  if (days < 60) return `${days} days`
+  if (days < 730) return `${Math.round(days / 30.44)} months`
+  return `${(days / 365.25).toFixed(1)} years`
+}

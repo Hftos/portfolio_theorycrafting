@@ -55,11 +55,26 @@ class BacktestRequest(BaseModel):
 # ---------- Responses ----------
 
 class Metrics(BaseModel):
+    # Any value can be None when it can't be computed (e.g. Sharpe with zero volatility).
     total_return: float
     cagr: float
     volatility: float
-    sharpe_ratio: float | None   # None when it can't be computed (zero volatility)
+    sharpe_ratio: float | None
+    sortino_ratio: float | None
+    calmar_ratio: float | None
     max_drawdown: float
+    current_drawdown: float
+    longest_drawdown_days: int
+    best_year: float | None = Field(description="Best full calendar year; None if no full year")
+    worst_year: float | None
+    positive_months: float
+    beta: float | None = Field(description="Sensitivity to the S&P 500 (SPY); None if SPY isn't loaded")
+
+
+class YearReturn(BaseModel):
+    year: int
+    value: float
+    partial: bool = Field(description="True if the data doesn't cover the whole year")
 
 
 class Point(BaseModel):
@@ -73,6 +88,7 @@ class BacktestResponse(BaseModel):
     weights: dict[str, float]
     rebalance: str
     metrics: Metrics
+    annual_returns: list[YearReturn]
     growth: list[Point]
     drawdown: list[Point]
     correlation: dict[str, dict[str, float | None]]
@@ -127,6 +143,7 @@ class PortfolioResult(BaseModel):
     name: str
     weights: dict[str, float]
     metrics: Metrics
+    annual_returns: list[YearReturn]
     growth: list[Point]
     drawdown: list[Point]
     correlation: dict[str, dict[str, float | None]]
@@ -153,6 +170,7 @@ class Preset(BaseModel):
 
 class Security(BaseModel):
     ticker: str
+    name: str | None = Field(description="Full name, e.g. 'SPDR S&P 500 ETF Trust'; None if not fetched yet")
     first_date: date
     last_date: date
     num_days: int

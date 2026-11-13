@@ -1,4 +1,5 @@
 import { newRowId } from '../../lib/ids'
+import { TickerPicker } from './TickerPicker'
 import type { Security } from '../../types/api'
 import type { HoldingRow } from '../../types/portfolio'
 
@@ -7,7 +8,6 @@ interface Props {
   securities: Security[]
   onChange: (holdings: HoldingRow[]) => void
 }
-
 
 export function HoldingsList({ holdings, securities, onChange }: Props) {
   const total = holdings.reduce((sum, h) => sum + (Number(h.weight) || 0), 0)
@@ -49,14 +49,12 @@ export function HoldingsList({ holdings, securities, onChange }: Props) {
           {holdings.map((h) => (
             <tr key={h.id}>
               <td>
-                <select value={h.ticker} onChange={(e) => updateRow(h.id, 'ticker', e.target.value)}>
-                  <option value="">Choose…</option>
-                  {securities.map((s) => (
-                    <option key={s.ticker} value={s.ticker}>
-                      {s.ticker}
-                    </option>
-                  ))}
-                </select>
+                <TickerPicker
+                  value={h.ticker}
+                  securities={securities}
+                  exclude={holdings.filter((other) => other.id !== h.id).map((other) => other.ticker)}
+                  onChange={(ticker) => updateRow(h.id, 'ticker', ticker)}
+                />
               </td>
               <td>
                 <input

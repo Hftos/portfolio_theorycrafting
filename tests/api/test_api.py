@@ -54,7 +54,13 @@ def test_backtest_happy_path(client):
     assert body["start_date"] == "2020-01-01"
     assert body["growth"][0]["value"] > 0
     assert len(body["growth"]) == len(body["drawdown"])
-    assert set(body["metrics"]) == {"total_return", "cagr", "volatility", "sharpe_ratio", "max_drawdown"}
+    assert set(body["metrics"]) == {
+        "total_return", "cagr", "volatility", "sharpe_ratio", "sortino_ratio", "calmar_ratio",
+        "max_drawdown", "current_drawdown", "longest_drawdown_days",
+        "best_year", "worst_year", "positive_months", "beta",
+    }
+    assert body["metrics"]["beta"] is None          # no SPY in the test database
+    assert [y["year"] for y in body["annual_returns"]] == [2020, 2021]
     assert body["correlation"]["STOCK"]["STOCK"] == pytest.approx(1.0)
 
 
@@ -87,3 +93,19 @@ def test_missing_database_gives_clear_error(tmp_path, monkeypatch):
     r = TestClient(app).get("/api/securities")
     assert r.status_code == 503
     assert "pipeline.run" in r.json()["detail"]
+
+
+def test_securities_include_names_when_present(client):
+    con = duckdb.connect(str(db.DB_PATH))
+    con.execute("ALTER TABLE securities ADD COLUMN name VARCHAR")
+    con.execute("UPDATE securities SET name = 'Steady Stock Fund' WHERE ticker = 'STOCK'")
+    con.close()
+    data = {s["ticker"]: s for s in client.get("/api/securities").json()}
+    assert data["STOCK"]["name"] == "Steady Stock Fund"
+    assert data["BOND"]["name"] is None
+
+
+def test_securities_work_on_a_database_without_names(client):
+    # The test database has no name column at all, like a database from before this change.
+    data = client.get("/api/securities").json()
+    assert all(s["name"] is None for s in data)

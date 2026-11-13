@@ -29,7 +29,7 @@ def weekly(growth: pd.Series, drawdown: pd.Series) -> tuple[pd.Series, pd.Series
 
 
 def metrics(m: dict) -> dict:
-    return {k: clean(v) for k, v in m.items()}
+    return {k: v if isinstance(v, int) else clean(v) for k, v in m.items()}
 
 
 def correlation(corr: pd.DataFrame) -> dict:
@@ -42,6 +42,7 @@ def portfolio_result(result: dict) -> dict:
     return {
         "weights": result["weights"],
         "metrics": metrics(result["metrics"]),
+        "annual_returns": result["annual_returns"],
         "growth": points(growth),
         "drawdown": points(drawdown),
         "correlation": correlation(result["correlation"]),

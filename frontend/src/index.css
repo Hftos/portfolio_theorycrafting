@@ -603,3 +603,157 @@ button.primary:disabled {
   text-align: right;
   padding-right: 0;
 }
+
+/* ---------- Ticker search ---------- */
+
+.ticker-picker {
+  position: relative;
+}
+
+.ticker-picker input {
+  width: 7rem;
+  text-transform: uppercase;
+}
+
+.ticker-picker input::placeholder {
+  text-transform: none;
+  font-style: italic;
+}
+
+.ticker-results {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 2px);
+  left: 0;
+  width: 22rem;
+  max-width: 80vw;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: #fffdf7;
+  border: 1px solid var(--ink);
+}
+
+.ticker-results li {
+  display: grid;
+  grid-template-columns: 4rem 1fr auto;
+  gap: 0.5rem;
+  align-items: baseline;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+}
+
+.ticker-results li.active {
+  background: var(--parchment);
+}
+
+.ticker-results li.used {
+  color: var(--ink-faded);
+  cursor: not-allowed;
+}
+
+.ticker-symbol {
+  font-weight: 600;
+}
+
+.ticker-name {
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ticker-since {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--ink-faded);
+}
+
+.ticker-results .ticker-empty {
+  display: block;
+  cursor: default;
+  font-style: italic;
+  color: var(--ink-faded);
+}
+
+/* ---------- Stats and yearly tables ---------- */
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table.stats-grid th[scope='row'] {
+  font-variant-caps: normal;
+  letter-spacing: 0;
+  color: var(--ink);
+  font-weight: 400;
+  text-align: left;
+  white-space: nowrap;
+}
+
+table.stats-grid thead th {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-caps: normal;
+  letter-spacing: 0;
+  color: var(--ink);
+}
+
+table.stats-grid .group-row th {
+  text-align: left;
+  font-variant-caps: small-caps;
+  letter-spacing: 0.03em;
+  color: var(--burgundy);
+  padding-top: 1rem;
+  border-bottom: 1px solid var(--ink);
+}
+
+table.stats-grid td {
+  white-space: nowrap;
+}
+
+table.stats-grid td.yours-cell {
+  font-weight: 600;
+}
+
+.year-scroll {
+  max-height: 28rem;
+  overflow-y: auto;
+}
+
+table.years {
+  border-collapse: separate;
+  border-spacing: 2px;
+}
+
+table.years thead th {
+  position: sticky;
+  top: 0;
+  background: var(--paper);
+  white-space: nowrap;
+  font-variant-caps: normal;
+  letter-spacing: 0;
+  color: var(--ink);
+  text-align: center;
+}
+
+table.years th[scope='row'] {
+  white-space: nowrap;
+  font-variant-caps: normal;
+  letter-spacing: 0;
+  color: var(--ink);
+}
+
+table.years td {
+  text-align: center;
+  min-width: 6rem;
+  padding: 0.25rem 0.5rem;
+}
+
+table.years tr.partial td {
+  font-style: italic;
+}
+
+label.toggle select {
+  padding: 0.1rem 0.3rem;
+}

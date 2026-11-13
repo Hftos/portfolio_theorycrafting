@@ -22,7 +22,21 @@ export interface Metrics {
   cagr: number
   volatility: number
   sharpe_ratio: number | null
+  sortino_ratio: number | null
+  calmar_ratio: number | null
   max_drawdown: number
+  current_drawdown: number
+  longest_drawdown_days: number
+  best_year: number | null // best full calendar year
+  worst_year: number | null
+  positive_months: number // share of months with a gain, 0-1
+  beta: number | null // vs. the S&P 500; null if SPY isn't loaded
+}
+
+export interface YearReturn {
+  year: number
+  value: number
+  partial: boolean // the data doesn't cover the whole year
 }
 
 export interface Point {
@@ -44,6 +58,7 @@ export interface BacktestResponse {
 
 export interface Security {
   ticker: string
+  name: string | null
   first_date: string
   last_date: string
   num_days: number
@@ -69,6 +84,7 @@ export interface PortfolioResult {
   name: string
   weights: Record<string, number>
   metrics: Metrics
+  annual_returns: YearReturn[]
   growth: Point[]
   drawdown: Point[]
   correlation: Record<string, Record<string, number | null>>

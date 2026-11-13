@@ -1,4 +1,5 @@
-"""Tickers to pre-load. Kept small so a full load fits in Tiingo's free tier (50 requests/hour)."""
+"""Tickers to pre-load. Each ticker costs 2 requests (prices + name), so keep a full load
+under Tiingo's free tier of 50 requests/hour: 25 tickers at most."""
 
 CORE_TICKERS = [
     # US stocks
