@@ -6,6 +6,7 @@ import { LEVELS, MODELS, RETURN_ASSUMPTIONS } from '../../lib/projection'
 import type { CompareRequest, ProjectionModel, ProjectResponse } from '../../types/api'
 import type { SeriesMeta } from '../../types/portfolio'
 import { ErrorMessage } from '../common/ErrorMessage'
+import { InfoTip, Term } from '../common/InfoTip'
 import { FanChart } from './FanChart'
 
 interface Props {
@@ -79,7 +80,9 @@ export function ProjectionPanel({ baseRequest, series }: Props) {
 
   return (
     <section className={`panel projection ${loading ? 'updating' : ''}`}>
-      <h2>Where it could go from here</h2>
+      <h2>
+        <Term id="monte_carlo">Where it could go from here</Term>
+      </h2>
       <p className="muted">
         {result ? result.paths.toLocaleString() : '5,000'} simulated futures, learned from this portfolio's own history
         {result && ` (${longDate(result.history_start)} to ${longDate(result.history_end)})`}. These are ranges of
@@ -110,13 +113,17 @@ export function ProjectionPanel({ baseRequest, series }: Props) {
         </label>
 
         <label className="control">
-          <span className="control-label">Monthly contribution ($)</span>
+          <span className="control-label">
+            Monthly contribution ($) <InfoTip id="contributions" />
+          </span>
           <input type="number" step={50} value={contribution} onChange={(e) => setContribution(e.target.value)} />
           <span className="control-hint">Use a negative number for withdrawals.</span>
         </label>
 
         <label className="control">
-          <span className="control-label">Future returns</span>
+          <span className="control-label">
+            Future returns <InfoTip id="return_assumption" />
+          </span>
           <select value={adjustment} onChange={(e) => setAdjustment(Number(e.target.value))}>
             {RETURN_ASSUMPTIONS.map((a) => (
               <option key={a.value} value={a.value}>
@@ -151,6 +158,7 @@ export function ProjectionPanel({ baseRequest, series }: Props) {
             <label className="toggle">
               <input type="checkbox" checked={logScale} onChange={(e) => setLogScale(e.target.checked)} />
               Log scale
+              <InfoTip id="log_scale" />
             </label>
           </div>
 
@@ -166,7 +174,8 @@ export function ProjectionPanel({ baseRequest, series }: Props) {
             />
             <div className="levels">
               <p className="levels-title">
-                After {result.horizon_years} {result.horizon_years === 1 ? 'year' : 'years'}
+                After {result.horizon_years} {result.horizon_years === 1 ? 'year' : 'years'}{' '}
+                <InfoTip id="levels" />
               </p>
               <dl>
                 {LEVELS.map((level) => (
@@ -223,7 +232,8 @@ export function ProjectionPanel({ baseRequest, series }: Props) {
           </div>
           {result.portfolios.length > 1 && (
             <p className="muted">
-              Every portfolio faces the same simulated futures, so differences come from the portfolios, not from luck.
+              Every portfolio faces the same simulated futures, so differences come from the portfolios, not from luck.{' '}
+              <InfoTip id="same_futures" />
             </p>
           )}
         </>

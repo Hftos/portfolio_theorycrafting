@@ -37,6 +37,13 @@
 
 body {
   margin: 0;
+  /* Paper texture over the parchment color. The color shows while the image loads,
+     and "multiply" tints the texture toward the site's parchment tone. */
+  background-color: var(--parchment);
+  background-image: url('./assets/paper-texture.jpg');
+  background-size: cover;
+  background-attachment: fixed;
+  background-blend-mode: multiply;
 }
 
 h1,
@@ -900,4 +907,79 @@ table.projection-table td:not(:first-child) {
   .projection-controls {
     grid-template-columns: 1fr;
   }
+}
+
+/* ---------- Explanations (InfoTip) ---------- */
+
+.term {
+  white-space: nowrap; /* keep the "?" on the same line as its word */
+}
+
+.infotip-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.05em;
+  height: 1.05em;
+  margin-left: 0.3em;
+  padding: 0;
+  border: 1px solid var(--ink-faded);
+  border-radius: 50%; /* the one round shape on the page: a familiar "help" mark */
+  background: transparent;
+  color: var(--ink-faded);
+  font-family: inherit;
+  font-size: 0.75em;
+  font-style: normal;
+  font-weight: 500;
+  font-variant-caps: normal;
+  line-height: 1;
+  letter-spacing: 0;
+  vertical-align: 0.15em;
+  cursor: help;
+}
+
+.infotip-button:hover,
+.infotip-button[aria-expanded='true'] {
+  border-color: var(--burgundy);
+  background: var(--burgundy);
+  color: var(--paper);
+}
+
+.infotip-panel {
+  position: fixed;
+  z-index: 100;
+  width: 300px;
+  max-width: calc(100vw - 16px);
+  /* Dark olive-brown with a faint lighter pattern on top. */
+  background-color: #4a4532;
+  background-image:
+    linear-gradient(rgba(74, 69, 50, 0.85), rgba(74, 69, 50, 0.85)),
+    url('./assets/tooltipbg.svg');
+  background-repeat: repeat;
+  border: 1px solid #241b15;
+  border-top: 3px solid #a0803a;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.9rem;
+  font-weight: 400;
+  font-style: normal;
+  font-variant-caps: normal;
+  letter-spacing: 0;
+  line-height: 1.45;
+  color: #f8f3e6; /* light text on the dark background */
+  text-align: left;
+  white-space: normal;
+  pointer-events: none; /* never blocks the mouse from what's underneath */
+}
+
+.infotip-panel p {
+  margin: 0 0 0.4rem;
+}
+
+.infotip-panel p:last-child {
+  margin-bottom: 0;
+}
+
+.infotip-title {
+  font-weight: 600;
+  color: #d9bf7f; /* light gold; burgundy would vanish on olive */
 }

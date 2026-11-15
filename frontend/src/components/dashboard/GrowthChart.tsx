@@ -6,6 +6,7 @@ import { dollars, dollarsCompact, year } from '../../lib/format'
 import { allValues, seriesKey, type ChartRow } from '../../lib/series'
 import type { SeriesMeta } from '../../types/portfolio'
 import { ChartLegend } from './ChartLegend'
+import { InfoTip } from '../common/InfoTip'
 import { ChartTooltip } from './ChartTooltip'
 
 // Log-scale ticks at 1-2-5 steps ($5K, $10K, $20K, $50K...).
@@ -55,6 +56,7 @@ export function GrowthChart({ rows, series }: Props) {
         <label className="toggle">
           <input type="checkbox" checked={logScale} onChange={(e) => setLogScale(e.target.checked)} />
           Log scale
+          <InfoTip id="log_scale" />
         </label>
       </div>
       <ChartLegend series={series} />

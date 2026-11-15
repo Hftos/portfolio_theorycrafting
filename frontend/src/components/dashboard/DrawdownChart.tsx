@@ -5,6 +5,7 @@ import { longDate, pct, year } from '../../lib/format'
 import { allValues, seriesKey, type ChartRow } from '../../lib/series'
 import type { SeriesMeta } from '../../types/portfolio'
 import { ChartLegend } from './ChartLegend'
+import { Term } from '../common/InfoTip'
 import { ChartTooltip } from './ChartTooltip'
 
 interface Props {
@@ -28,7 +29,9 @@ export function DrawdownChart({ rows, series }: Props) {
 
   return (
     <section className="panel">
-      <h2>Drawdowns</h2>
+      <h2>
+        <Term id="drawdown_chart">Drawdowns</Term>
+      </h2>
       <p className="muted">
         How far below its previous high each portfolio was. Yours bottomed at {pct(worst[yours] as number, 1)} in the
         week of {longDate(worst.date)}.

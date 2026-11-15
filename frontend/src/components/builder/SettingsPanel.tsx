@@ -1,5 +1,6 @@
 import type { Rebalance } from '../../types/api'
 import type { Settings } from '../../types/portfolio'
+import { InfoTip } from '../common/InfoTip'
 
 interface Props {
   settings: Settings
@@ -24,7 +25,9 @@ export function SettingsPanel({ settings, onChange }: Props) {
       <h2>Settings</h2>
 
       <label>
-        Rebalance
+        <span>
+          Rebalance <InfoTip id="rebalance" />
+        </span>
         <select value={settings.rebalance} onChange={(e) => update('rebalance', e.target.value as Rebalance)}>
           {REBALANCE_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
@@ -35,7 +38,9 @@ export function SettingsPanel({ settings, onChange }: Props) {
       </label>
 
       <label>
-        Start date <span className="muted">(blank = earliest)</span>
+        <span>
+          Start date <span className="muted">(blank = earliest)</span> <InfoTip id="backtest_period" />
+        </span>
         <input type="date" value={settings.startDate} onChange={(e) => update('startDate', e.target.value)} />
       </label>
 
@@ -45,7 +50,9 @@ export function SettingsPanel({ settings, onChange }: Props) {
       </label>
 
       <label>
-        Risk-free rate (%)
+        <span>
+          Risk-free rate (%) <InfoTip id="risk_free_rate" />
+        </span>
         <input
           type="number"
           min="0"

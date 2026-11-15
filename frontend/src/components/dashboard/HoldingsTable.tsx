@@ -1,5 +1,6 @@
 import { num, pct } from '../../lib/format'
 import type { PortfolioResult } from '../../types/api'
+import { Term } from '../common/InfoTip'
 
 interface Props {
   portfolio: PortfolioResult
@@ -26,11 +27,21 @@ export function HoldingsTable({ portfolio }: Props) {
         <thead>
           <tr>
             <th>Holding</th>
-            <th>Weight</th>
-            <th>CAGR</th>
-            <th>Volatility</th>
-            <th>Sharpe</th>
-            <th>Max drawdown</th>
+            <th>
+              <Term id="weights">Weight</Term>
+            </th>
+            <th>
+              <Term id="cagr">CAGR</Term>
+            </th>
+            <th>
+              <Term id="volatility">Volatility</Term>
+            </th>
+            <th>
+              <Term id="sharpe">Sharpe</Term>
+            </th>
+            <th>
+              <Term id="max_drawdown">Max drawdown</Term>
+            </th>
           </tr>
         </thead>
         <tbody>

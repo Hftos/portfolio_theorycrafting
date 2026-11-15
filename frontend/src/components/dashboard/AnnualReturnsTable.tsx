@@ -2,6 +2,7 @@ import { returnCellColor, returnTextColor } from '../../lib/chartTheme'
 import { signedPct } from '../../lib/format'
 import type { PortfolioResult } from '../../types/api'
 import type { SeriesMeta } from '../../types/portfolio'
+import { Term } from '../common/InfoTip'
 
 interface Props {
   portfolios: PortfolioResult[]
@@ -16,7 +17,9 @@ export function AnnualReturnsTable({ portfolios, series }: Props) {
 
   return (
     <section className="panel">
-      <h2>Calendar-year returns</h2>
+      <h2>
+        <Term id="calendar_returns">Calendar-year returns</Term>
+      </h2>
       <p className="muted">
         Each year's gain or loss, January to December. Partial years, where the data starts or ends mid-year, are
         marked and left out of best and worst year.

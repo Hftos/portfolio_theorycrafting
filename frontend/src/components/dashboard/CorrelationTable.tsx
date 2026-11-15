@@ -1,6 +1,7 @@
 import { correlationColor, correlationTextColor } from '../../lib/chartTheme'
 import { num } from '../../lib/format'
 import type { BacktestResponse } from '../../types/api'
+import { Term } from '../common/InfoTip'
 
 interface Props {
   correlation: BacktestResponse['correlation']
@@ -12,7 +13,9 @@ export function CorrelationTable({ correlation }: Props) {
 
   return (
     <section className="panel">
-      <h2>Correlation</h2>
+      <h2>
+        <Term id="correlation">Correlation</Term>
+      </h2>
       <p className="muted">
         How closely daily returns move together: +1 in lockstep, 0 unrelated, −1 opposite. The lower the
         correlation, the more each holding cushions the others.

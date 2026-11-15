@@ -2,6 +2,7 @@ import { longDate } from '../../lib/format'
 import { mergeSeries } from '../../lib/series'
 import type { CompareRequest, CompareResponse } from '../../types/api'
 import type { SeriesMeta } from '../../types/portfolio'
+import { InfoTip } from '../common/InfoTip'
 import { ProjectionPanel } from '../projection/ProjectionPanel'
 import { AnnualReturnsTable } from './AnnualReturnsTable'
 import { CorrelationTable } from './CorrelationTable'
@@ -35,7 +36,7 @@ export function Dashboard({ result, series, isStale, runRequest }: Props) {
       {comparing && (
         <p className="period-note">
           All portfolios are measured from {longDate(result.start_date)}, when {result.limited_by}, the youngest
-          holding across them, has data.
+          holding across them, has data. <InfoTip id="backtest_period" />
         </p>
       )}
 

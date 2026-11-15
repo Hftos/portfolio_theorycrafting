@@ -1,4 +1,5 @@
 import { newRowId } from '../../lib/ids'
+import { Term } from '../common/InfoTip'
 import { TickerPicker } from './TickerPicker'
 import type { Security } from '../../types/api'
 import type { HoldingRow } from '../../types/portfolio'
@@ -41,7 +42,9 @@ export function HoldingsList({ holdings, securities, onChange }: Props) {
         <thead>
           <tr>
             <th>Ticker</th>
-            <th>Weight (%)</th>
+            <th>
+              <Term id="weights">Weight (%)</Term>
+            </th>
             <th></th>
           </tr>
         </thead>

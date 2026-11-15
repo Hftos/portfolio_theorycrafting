@@ -3,6 +3,7 @@ import { newRowId } from '../../lib/ids'
 import type { Preset, Security } from '../../types/api'
 import type { Comparison } from '../../types/portfolio'
 import { HoldingsList } from '../builder/HoldingsList'
+import { Term } from '../common/InfoTip'
 
 const MAX_COMPARISONS = 5 // plus yours = 6, the backend's limit
 
@@ -69,7 +70,9 @@ export function ComparisonPanel({ comparisons, presets, securities, onChange }: 
 
   return (
     <section className="panel">
-      <h2>Compare against</h2>
+      <h2>
+        <Term id="presets">Compare against</Term>
+      </h2>
       <p className="muted">Add well-known portfolios, or build your own, to run alongside yours over the same dates.</p>
 
       <div className="preset-list">

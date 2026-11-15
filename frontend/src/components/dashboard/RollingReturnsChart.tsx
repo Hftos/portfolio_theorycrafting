@@ -7,6 +7,7 @@ import { rollingReturns, rollingSummary } from '../../lib/rolling'
 import { allValues, seriesKey, type ChartRow } from '../../lib/series'
 import type { SeriesMeta } from '../../types/portfolio'
 import { ChartLegend } from './ChartLegend'
+import { Term } from '../common/InfoTip'
 import { ChartTooltip } from './ChartTooltip'
 
 const WINDOWS = [1, 3, 5, 10]
@@ -44,7 +45,9 @@ export function RollingReturnsChart({ growth, series }: Props) {
   return (
     <section className="panel">
       <div className="chart-header">
-        <h2>Rolling {years}-year returns</h2>
+        <h2>
+          <Term id="rolling_returns">Rolling {years}-year returns</Term>
+        </h2>
         <label className="toggle">
           Window
           <select value={years} onChange={(e) => setChosen(Number(e.target.value))}>
