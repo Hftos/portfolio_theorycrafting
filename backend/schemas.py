@@ -220,6 +220,28 @@ class Preset(BaseModel):
     first_date: date | None
 
 
+# ---------- Catalog (the beginner picker) ----------
+
+class CatalogSecurity(BaseModel):
+    ticker: str
+    description: str
+    name: str | None
+    first_date: date | None
+    available: bool = Field(description="False until the pipeline has loaded its prices")
+
+
+class CatalogGroup(BaseModel):
+    name: str
+    securities: list[CatalogSecurity]
+
+
+class CatalogCategory(BaseModel):
+    id: str
+    label: str
+    description: str = Field(description="What this kind of asset does in a portfolio")
+    groups: list[CatalogGroup]
+
+
 class Security(BaseModel):
     ticker: str
     name: str | None = Field(description="Full name, e.g. 'SPDR S&P 500 ETF Trust'; None if not fetched yet")

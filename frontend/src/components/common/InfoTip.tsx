@@ -17,8 +17,11 @@ interface Position {
 // focus, or on click/tap (which keeps it open until you click elsewhere or
 // press Escape), so it works with a mouse, a keyboard and a phone.
 // ---------------------------------------------------------------------------
-export function InfoTip({ id }: { id: GlossaryId }) {
-  const entry = GLOSSARY[id]
+// Either a glossary entry (id) or custom text (title + body), e.g. a catalog column's description.
+type InfoTipProps = { id: GlossaryId } | { title: string; body: readonly string[] }
+
+export function InfoTip(props: InfoTipProps) {
+  const entry = 'id' in props ? GLOSSARY[props.id] : { title: props.title, body: props.body }
   const buttonRef = useRef<HTMLButtonElement>(null)
   const panelId = useId()
 

@@ -1,28 +1,14 @@
-"""Tickers to pre-load. Each ticker costs 2 requests (prices + name), so keep a full load
-under Tiingo's free tier of 50 requests/hour: 25 tickers at most."""
+"""The tickers the pipeline loads with --catalog.
 
-CORE_TICKERS = [
-    # US stocks
-    "SPY",   # S&P 500
-    "VTI",   # Total US market
-    "QQQ",   # Nasdaq 100
-    "IWM",   # Small caps
-    # International
-    "VXUS",  # Total international
-    "EFA",   # Developed markets
-    "EEM",   # Emerging markets
-    # Bonds
-    "AGG",   # US aggregate bonds
-    "BND",   # Total bond market
-    "TLT",   # 20+ year Treasuries
-    "IEF",   # 7-10 year Treasuries
-    "SHY",   # 1-3 year Treasuries
-    "TIP",   # Inflation-protected Treasuries
-    # Real assets
-    "GLD",   # Gold
-    "VNQ",   # Real estate
-    "DBC",   # Commodities (used by the All-Weather preset)
-    # Mutual funds
-    "VFIAX", # Vanguard 500 Index (Admiral)
-    "FXAIX", # Fidelity 500 Index
-]
+They come from the curated catalog in backend/catalog.py, so the picker and the
+database always agree on what should be available. To add a security, add it to
+the catalog; it's picked up here automatically.
+
+At 2 Tiingo requests per ticker (prices + name), a full catalog load is far more than
+the free plan's 50 requests an hour. The loader is resumable: run it again (or use
+--wait) and it continues where it stopped.
+"""
+
+from backend.catalog import all_tickers
+
+CORE_TICKERS = all_tickers()

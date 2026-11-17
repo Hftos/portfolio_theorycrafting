@@ -1,16 +1,17 @@
 import { newRowId } from '../../lib/ids'
 import { Term } from '../common/InfoTip'
-import { TickerPicker } from './TickerPicker'
-import type { Security } from '../../types/api'
+import { SecurityField } from './SecurityField'
+import type { CatalogCategory, Security } from '../../types/api'
 import type { HoldingRow } from '../../types/portfolio'
 
 interface Props {
   holdings: HoldingRow[]
   securities: Security[]
+  catalog: CatalogCategory[]
   onChange: (holdings: HoldingRow[]) => void
 }
 
-export function HoldingsList({ holdings, securities, onChange }: Props) {
+export function HoldingsList({ holdings, securities, catalog, onChange }: Props) {
   const total = holdings.reduce((sum, h) => sum + (Number(h.weight) || 0), 0)
 
   // Update one field of one row, leaving the others untouched.
@@ -52,8 +53,9 @@ export function HoldingsList({ holdings, securities, onChange }: Props) {
           {holdings.map((h) => (
             <tr key={h.id}>
               <td>
-                <TickerPicker
+                <SecurityField
                   value={h.ticker}
+                  catalog={catalog}
                   securities={securities}
                   exclude={holdings.filter((other) => other.id !== h.id).map((other) => other.ticker)}
                   onChange={(ticker) => updateRow(h.id, 'ticker', ticker)}

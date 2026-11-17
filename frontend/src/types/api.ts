@@ -155,3 +155,25 @@ export interface ProjectResponse {
   total_invested: number
   portfolios: PortfolioProjection[]
 }
+
+// ---------- Catalog (GET /api/catalog) ----------
+
+export interface CatalogSecurity {
+  ticker: string
+  description: string
+  name: string | null
+  first_date: string | null
+  available: boolean // false until the pipeline has loaded its prices
+}
+
+export interface CatalogGroup {
+  name: string
+  securities: CatalogSecurity[]
+}
+
+export interface CatalogCategory {
+  id: string
+  label: string
+  description: string // what this kind of asset does in a portfolio
+  groups: CatalogGroup[]
+}

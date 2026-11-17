@@ -1,6 +1,6 @@
 import { SERIES_COLORS } from '../../lib/chartTheme'
 import { newRowId } from '../../lib/ids'
-import type { Preset, Security } from '../../types/api'
+import type { CatalogCategory, Preset, Security } from '../../types/api'
 import type { Comparison } from '../../types/portfolio'
 import { HoldingsList } from '../builder/HoldingsList'
 import { Term } from '../common/InfoTip'
@@ -11,6 +11,7 @@ interface Props {
   comparisons: Comparison[]
   presets: Preset[]
   securities: Security[]
+  catalog: CatalogCategory[]
   onChange: (comparisons: Comparison[]) => void
 }
 
@@ -23,7 +24,7 @@ function freeColorSlot(comparisons: Comparison[]): number {
   return 1
 }
 
-export function ComparisonPanel({ comparisons, presets, securities, onChange }: Props) {
+export function ComparisonPanel({ comparisons, presets, securities, catalog, onChange }: Props) {
   const full = comparisons.length >= MAX_COMPARISONS
 
   function togglePreset(preset: Preset) {
@@ -131,6 +132,7 @@ export function ComparisonPanel({ comparisons, presets, securities, onChange }: 
             <HoldingsList
               holdings={c.holdings}
               securities={securities}
+              catalog={catalog}
               onChange={(holdings) => update(c.id, { holdings })}
             />
           )}

@@ -2,6 +2,7 @@
 
 import type {
   BacktestRequest,
+  CatalogCategory,
   BacktestResponse,
   CompareRequest,
   CompareResponse,
@@ -78,4 +79,8 @@ export function runProjection(req: ProjectRequest): Promise<ProjectResponse> {
     method: 'POST',
     body: JSON.stringify(req),
   })
+}
+
+export function getCatalog(): Promise<CatalogCategory[]> {
+  return request<CatalogCategory[]>('/api/catalog')
 }

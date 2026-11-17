@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import { getPresets, getSecurities, runCompare } from './api/client'
+import { getCatalog, getPresets, getSecurities, runCompare } from './api/client'
 import { HoldingsList } from './components/builder/HoldingsList'
 import { SettingsPanel } from './components/builder/SettingsPanel'
 import { ErrorMessage } from './components/common/ErrorMessage'
@@ -8,7 +8,7 @@ import { ComparisonPanel } from './components/comparison/ComparisonPanel'
 import { Dashboard } from './components/dashboard/Dashboard'
 import { buildRequest, YOUR_PORTFOLIO } from './lib/buildRequest'
 import { SERIES_COLORS } from './lib/chartTheme'
-import type { CompareRequest, CompareResponse, Preset, Security } from './types/api'
+import type { CatalogCategory, CompareRequest, CompareResponse, Preset, Security } from './types/api'
 import type { Comparison, HoldingRow, SeriesMeta, Settings } from './types/portfolio'
 
 const STARTING_HOLDINGS: HoldingRow[] = [
@@ -27,6 +27,7 @@ function App() {
   // Reference data from the backend
   const [securities, setSecurities] = useState<Security[]>([])
   const [presets, setPresets] = useState<Preset[]>([])
+  const [catalog, setCatalog] = useState<CatalogCategory[]>([])
   const [loadError, setLoadError] = useState<string | null>(null)
 
   // What the user is editing
@@ -44,12 +45,13 @@ function App() {
   // always describe the same portfolios and settings as the rest of the dashboard.
   const [runRequest, setRunRequest] = useState<CompareRequest | null>(null)
 
-  // Load tickers and presets once, when the page first opens.
+  // Load tickers, presets and the picker's catalog once, when the page first opens.
   useEffect(() => {
-    Promise.all([getSecurities(), getPresets()])
-      .then(([s, p]) => {
+    Promise.all([getSecurities(), getPresets(), getCatalog()])
+      .then(([s, p, c]) => {
         setSecurities(s)
         setPresets(p)
+        setCatalog(c)
       })
       .catch((e: Error) => setLoadError(e.message))
   }, [])
@@ -96,13 +98,14 @@ function App() {
             <h2>
               <span className="swatch" style={{ background: SERIES_COLORS[0] }} aria-hidden="true" /> Your portfolio
             </h2>
-            <HoldingsList holdings={holdings} securities={securities} onChange={setHoldings} />
+            <HoldingsList holdings={holdings} securities={securities} catalog={catalog} onChange={setHoldings} />
           </section>
 
           <ComparisonPanel
             comparisons={comparisons}
             presets={presets}
             securities={securities}
+            catalog={catalog}
             onChange={setComparisons}
           />
 
